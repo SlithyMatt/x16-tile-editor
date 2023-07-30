@@ -1,0 +1,943 @@
+ca65 V2.19 - Git 52e438792
+Main file   : main.asm
+Current file: main.asm
+
+000000r 1               .org $080D
+00080D  1               .segment "STARTUP"
+00080D  1               .segment "INIT"
+00080D  1               .segment "ONCE"
+00080D  1               .segment "CODE"
+00080D  1               
+00080D  1  4C E7 43        jmp start
+000810  1               
+000810  1               .include "x16.inc"
+000810  2               .ifndef X16_INC
+000810  2               X16_INC  = 1
+000810  2               
+000810  2               .ifndef __CX16__
+000810  2               __CX16__ = 1
+000810  2               .endif
+000810  2               
+000810  2               ; X16 addresses, values, and macros
+000810  2               ; Accurate for ROM release R38
+000810  2               
+000810  2               SD_DEVICE   = 8 ; also host file system on emulator if no SD image mounted
+000810  2               DISK_DEVICE = SD_DEVICE ; change if to be loaded off IEC device
+000810  2               
+000810  2               
+000810  2               ; RAM Addresses
+000810  2               
+000810  2               ; Kernal Registers
+000810  2               r0                = $02
+000810  2               r0L               = r0
+000810  2               r0H               = r0+1
+000810  2               r1                = $04
+000810  2               r1L               = r1
+000810  2               r1H               = r1+1
+000810  2               r2                = $06
+000810  2               r2L               = r2
+000810  2               r2H               = r2+1
+000810  2               r3                = $08
+000810  2               r3L               = r3
+000810  2               r3H               = r3+1
+000810  2               r4                = $0A
+000810  2               r4L               = r4
+000810  2               r4H               = r4+1
+000810  2               r5                = $0C
+000810  2               r5L               = r5
+000810  2               r5H               = r5+1
+000810  2               r6                = $0E
+000810  2               r6L               = r6
+000810  2               r6H               = r6+1
+000810  2               r7                = $10
+000810  2               r7L               = r7
+000810  2               r7H               = r7+1
+000810  2               r8                = $12
+000810  2               r8L               = r8
+000810  2               r8H               = r8+1
+000810  2               r9                = $14
+000810  2               r9L               = r9
+000810  2               r9H               = r9+1
+000810  2               r10               = $16
+000810  2               r10L              = r10
+000810  2               r10H              = r10+1
+000810  2               r11               = $18
+000810  2               r11L              = r11
+000810  2               r11H              = r11+1
+000810  2               r12               = $1A
+000810  2               r12L              = r12
+000810  2               r12H              = r12+1
+000810  2               r13               = $1C
+000810  2               r13L              = r13
+000810  2               r13H              = r13+1
+000810  2               r14               = $1E
+000810  2               r14L              = r14
+000810  2               r14H              = r14+1
+000810  2               r15               = $20
+000810  2               r15L              = r15
+000810  2               r15H              = r15+1
+000810  2               
+000810  2               ; Zero-Page userspace
+000810  2               ZP_PTR_1          = $7E   ; four pointers for temporary use only
+000810  2               ZP_PTR_2          = $22
+000810  2               ZP_PTR_3          = $24
+000810  2               ZP_PTR_4          = $26
+000810  2               
+000810  2               ; I/O Registers
+000810  2               VERA_addr_low     = $9F20
+000810  2               VERA_addr_high    = $9F21
+000810  2               VERA_addr_bank    = $9F22
+000810  2               VERA_data0        = $9F23
+000810  2               VERA_data1        = $9F24
+000810  2               VERA_ctrl         = $9F25
+000810  2               VERA_ien          = $9F26
+000810  2               VERA_isr          = $9F27
+000810  2               VERA_irqline_l    = $9F28
+000810  2               VERA_dc_video     = $9F29 ; VERA_ctrl(1) (DCSEL) = 0
+000810  2               VERA_dc_hscale    = $9F2A ; VERA_ctrl(1) (DCSEL) = 0
+000810  2               VERA_dc_vscale    = $9F2B ; VERA_ctrl(1) (DCSEL) = 0
+000810  2               VERA_dc_border    = $9F2C ; VERA_ctrl(1) (DCSEL) = 0
+000810  2               VERA_dc_hstart    = $9F29 ; VERA_ctrl(1) (DCSEL) = 1
+000810  2               VERA_dc_hstop     = $9F2A ; VERA_ctrl(1) (DCSEL) = 1
+000810  2               VERA_dc_vsstart   = $9F2B ; VERA_ctrl(1) (DCSEL) = 1
+000810  2               VERA_dc_vstop     = $9F2C ; VERA_ctrl(1) (DCSEL) = 1
+000810  2               VERA_L0_config    = $9F2D
+000810  2               VERA_L0_mapbase   = $9F2E
+000810  2               VERA_L0_tilebase  = $9F2F
+000810  2               VERA_L0_hscroll_l = $9F30
+000810  2               VERA_L0_hscroll_h = $9F31
+000810  2               VERA_L0_vscroll_l = $9F32
+000810  2               VERA_L0_vscroll_h = $9F33
+000810  2               VERA_L1_config    = $9F34
+000810  2               VERA_L1_mapbase   = $9F35
+000810  2               VERA_L1_tilebase  = $9F36
+000810  2               VERA_L1_hscroll_l = $9F37
+000810  2               VERA_L1_hscroll_h = $9F38
+000810  2               VERA_L1_vscroll_l = $9F39
+000810  2               VERA_L1_vscroll_h = $9F3A
+000810  2               VERA_audio_ctrl   = $9F3B
+000810  2               VERA_audio_rate   = $9F3C
+000810  2               VERA_audio_data   = $9F3D
+000810  2               VERA_spi_data     = $9F3E
+000810  2               VERA_spi_ctrl     = $9F3F
+000810  2               
+000810  2               ROM_BANK          = $01
+000810  2               RAM_BANK          = $00
+000810  2               
+000810  2               YM_reg            = $9F40
+000810  2               YM_data           = $9F41
+000810  2               
+000810  2               ; Emulator Registers
+000810  2               GIF_ctrl          = $9FB5
+000810  2               
+000810  2               ; ROM Banks
+000810  2               KERNAL_ROM_BANK   = 0
+000810  2               KEYBOARD_ROM_BANK = 1
+000810  2               CBDOS_ROM_BANK    = 2
+000810  2               GEOS_ROM_BANK     = 3
+000810  2               BASIC_ROM_BANK    = 4
+000810  2               MONITOR_ROM_BANK  = 5
+000810  2               CHARSET_ROM_BANK  = 6
+000810  2               
+000810  2               ; Banked Addresses
+000810  2               RAM_WIN           = $A000
+000810  2               RAM_WIN_SIZE      = $2000
+000810  2               ROM_WIN           = $C000
+000810  2               
+000810  2               ; Kernal Subroutines
+000810  2               ENTROPY_GET                   := $FECF
+000810  2               CONSOLE_set_paging_message    := $FED5
+000810  2               CONSOLE_put_image             := $FED8
+000810  2               CONSOLE_init                  := $FEDB
+000810  2               CONSOLE_put_char              := $FEDE
+000810  2               CONSOLE_get_char              := $FEE1
+000810  2               MEMORY_FILL                   := $FEE4
+000810  2               MEMORY_COPY                   := $FEE7
+000810  2               MEMORY_CRC                    := $FEEA
+000810  2               MEMORY_DECOMPRESS             := $FEED
+000810  2               SPRITE_set_image              := $FEF0
+000810  2               SPRITE_set_position           := $FEF3
+000810  2               FB_init                       := $FEF6
+000810  2               FB_get_info                   := $FEF9
+000810  2               FB_set_palette                := $FEFC
+000810  2               FB_cursor_position            := $FEFF
+000810  2               FB_cursor_next_line           := $FF02
+000810  2               FB_get_pixel                  := $FF05
+000810  2               FB_get_pixels                 := $FF08
+000810  2               FB_set_pixel                  := $FF0B
+000810  2               FB_set_pixels                 := $FF0E
+000810  2               FB_set_8_pixels               := $FF11
+000810  2               FB_set_8_pixels_opaque        := $FF14
+000810  2               FB_fill_pixels                := $FF17
+000810  2               FB_filter_pixels              := $FF1A
+000810  2               FB_move_pixels                := $FF1D
+000810  2               GRAPH_init                    := $FF20
+000810  2               GRAPH_clear                   := $FF23
+000810  2               GRAPH_set_window              := $FF26
+000810  2               GRAPH_set_colors              := $FF29
+000810  2               GRAPH_draw_line               := $FF2C
+000810  2               GRAPH_draw_rect               := $FF2F
+000810  2               GRAPH_move_rect               := $FF32
+000810  2               GRAPH_draw_oval               := $FF35
+000810  2               GRAPH_draw_image              := $FF38
+000810  2               GRAPH_set_font                := $FF3B
+000810  2               GRAPH_get_char_size           := $FF3E
+000810  2               GRAPH_put_char                := $FF41
+000810  2               MONITOR                       := $FF44
+000810  2               ENTER_BASIC                   := $FF47
+000810  2               CLOSE_ALL                     := $FF4A
+000810  2               CLOCK_SET_DATE_TIME           := $FF4D
+000810  2               CLOCK_GET_DATE_TIME           := $FF50
+000810  2               JOYSTICK_SCAN                 := $FF53
+000810  2               JOYSTICK_GET                  := $FF56
+000810  2               SCREEN_MODE               		:= $FF5F
+000810  2               SCREEN_SET_CHARSET            := $FF62
+000810  2               PFKEY                         := $FF65
+000810  2               MOUSE_CONFIG                  := $FF68
+000810  2               MOUSE_GET                     := $FF6B
+000810  2               JSRFAR_kernal_addr            := $FF6E
+000810  2               MOUSE_SCAN                    := $FF71
+000810  2               FETCH                         := $FF74
+000810  2               STASH                         := $FF77
+000810  2               CMPARE                        := $FF7A
+000810  2               PRIMM                         := $FF7D
+000810  2               
+000810  2               SCINIT                        := $FF81
+000810  2               IOINIT                        := $FF84
+000810  2               RAMTAS                        := $FF87
+000810  2               RESTOR                        := $FF8A
+000810  2               LKUPLA                        := $FF8D
+000810  2               SETMSG                        := $FF90
+000810  2               SECOND                        := $FF93
+000810  2               TKSA                          := $FF96
+000810  2               MEMTOP                        := $FF99
+000810  2               MEMBOT                        := $FF9C
+000810  2               SETTMO                        := $FFA2
+000810  2               IECIN                         := $FFA5
+000810  2               IECOUT                        := $FFA8
+000810  2               UNTALK                        := $FFAB
+000810  2               UNLISTEN                      := $FFAE
+000810  2               LISTEN                        := $FFB1
+000810  2               TALK                          := $FFB4
+000810  2               READST                        := $FFB7
+000810  2               SETLFS                        := $FFBA
+000810  2               SETNAM                        := $FFBD
+000810  2               OPEN                          := $FFC0
+000810  2               CLOSE                         := $FFC3
+000810  2               CHKIN                         := $FFC6
+000810  2               CHKOUT                        := $FFC9
+000810  2               CLRCHN                        := $FFCC
+000810  2               CHRIN                         := $FFCF
+000810  2               BASIN                         := CHRIN ; alias
+000810  2               CHROUT                        := $FFD2
+000810  2               BSOUT                         := CHROUT ; alias
+000810  2               LOAD                          := $FFD5
+000810  2               SAVE                          := $FFD8
+000810  2               SETTIM                        := $FFDB
+000810  2               RDTIM                         := $FFDE
+000810  2               STOP                          := $FFE1
+000810  2               GETIN                         := $FFE4
+000810  2               CLALL                         := $FFE7
+000810  2               UDTIM                         := $FFEA
+000810  2               SCREEN                        := $FFED
+000810  2               PLOT                          := $FFF0
+000810  2               IOBASE                        := $FFF3
+000810  2               
+000810  2               ; BASIC Vectors
+000810  2               BASIC_PANIC       := $C000
+000810  2               BASIC_INIT        := $C003
+000810  2               
+000810  2               
+000810  2               ; VRAM Addresses
+000810  2               VRAM_petscii   = $0F800
+000810  2               VRAM_psg       = $1F9C0
+000810  2               VRAM_palette   = $1FA00
+000810  2               VRAM_sprattr   = $1FC00
+000810  2               
+000810  2               ; RAM Vectors
+000810  2               IRQVec         := $0314
+000810  2               BRKVec         := $0316
+000810  2               NMIVec         := $0318
+000810  2               FETVec         := $03AF
+000810  2               ;STAVec         := TBD
+000810  2               ;CMPVec         := TBD
+000810  2               
+000810  2               
+000810  2               ;   Macros
+000810  2               
+000810  2               .macro VERA_SET_ADDR addr, stride
+000810  2                  .ifnblank stride
+000810  2                     .if stride < 0
+000810  2                        lda #((^addr) | $08 | ((0-stride) << 4))
+000810  2                     .else
+000810  2                        lda #((^addr) | (stride << 4))
+000810  2                     .endif
+000810  2                  .else
+000810  2                     lda #(^addr) | $10
+000810  2                  .endif
+000810  2               
+000810  2                  sta VERA_addr_bank
+000810  2                  lda #(>addr)
+000810  2                  sta VERA_addr_high
+000810  2                  lda #(<addr)
+000810  2                  sta VERA_addr_low
+000810  2               .endmacro
+000810  2               
+000810  2               .macro JSRFAR far_sr_addr, bank
+000810  2               	jsr JSRFAR_kernal_addr
+000810  2               	.addr far_sr_addr
+000810  2               	.byte bank
+000810  2               .endmacro
+000810  2               
+000810  2               .endif
+000810  2               
+000810  1               .include "charmap.inc"
+000810  2               .ifndef CHARMAP_INC
+000810  2               CHARMAP_INC = 1
+000810  2               
+000810  2               ; ASCII-Screen Code character map
+000810  2               .charmap $40, $00
+000810  2               .charmap $41, $41
+000810  2               .charmap $42, $42
+000810  2               .charmap $43, $43
+000810  2               .charmap $44, $44
+000810  2               .charmap $45, $45
+000810  2               .charmap $46, $46
+000810  2               .charmap $47, $47
+000810  2               .charmap $48, $48
+000810  2               .charmap $49, $49
+000810  2               .charmap $4a, $4a
+000810  2               .charmap $4b, $4b
+000810  2               .charmap $4c, $4c
+000810  2               .charmap $4d, $4d
+000810  2               .charmap $4e, $4e
+000810  2               .charmap $4f, $4f
+000810  2               .charmap $50, $50
+000810  2               .charmap $51, $51
+000810  2               .charmap $52, $52
+000810  2               .charmap $53, $53
+000810  2               .charmap $54, $54
+000810  2               .charmap $55, $55
+000810  2               .charmap $56, $56
+000810  2               .charmap $57, $57
+000810  2               .charmap $58, $58
+000810  2               .charmap $59, $59
+000810  2               .charmap $5a, $5a
+000810  2               .charmap $5f, $64
+000810  2               .charmap $61, $01
+000810  2               .charmap $62, $02
+000810  2               .charmap $63, $03
+000810  2               .charmap $64, $04
+000810  2               .charmap $65, $05
+000810  2               .charmap $66, $06
+000810  2               .charmap $67, $07
+000810  2               .charmap $68, $08
+000810  2               .charmap $69, $09
+000810  2               .charmap $6a, $0a
+000810  2               .charmap $6b, $0b
+000810  2               .charmap $6c, $0c
+000810  2               .charmap $6d, $0d
+000810  2               .charmap $6e, $0e
+000810  2               .charmap $6f, $0f
+000810  2               .charmap $70, $10
+000810  2               .charmap $71, $11
+000810  2               .charmap $72, $12
+000810  2               .charmap $73, $13
+000810  2               .charmap $74, $14
+000810  2               .charmap $75, $15
+000810  2               .charmap $76, $16
+000810  2               .charmap $77, $17
+000810  2               .charmap $78, $18
+000810  2               .charmap $79, $19
+000810  2               .charmap $7a, $1a
+000810  2               .charmap $7c, $5d
+000810  2               
+000810  2               .endif
+000810  2               
+000810  1               .include "initscreen.asm"
+000810  2               initscreen:
+000810  2               ; menu bar
+000810  2               ;  row 0 (upper border)
+000810  2  70 01        .byte $70,1
+000812  2  40 01 40 01  .repeat 3
+000816  2  40 01 40 01  
+00081A  2  40 01 40 01  
+00084E  2                  .repeat 9
+00084E  2                     .byte $40,1
+00084E  2                  .endrepeat
+00084E  2                  .byte $72,1
+00084E  2               .endrepeat
+00084E  2  40 01 40 01  .repeat 40
+000852  2  40 01 40 01  
+000856  2  40 01 40 01  
+00089E  2                  .byte $40,1
+00089E  2               .endrepeat
+00089E  2  72 01        .byte $72,1
+0008A0  2  40 01 40 01  .repeat 7
+0008A4  2  40 01 40 01  
+0008A8  2  40 01 40 01  
+0008AE  2                  .byte $40,1
+0008AE  2               .endrepeat
+0008AE  2  6E 01        .byte $6E,1
+0008B0  2  00 00 00 00  .repeat 96
+0008B4  2  00 00 00 00  
+0008B8  2  00 00 00 00  
+000910  2                  .byte 0 ; offscreen
+000910  2               .endrepeat
+000910  2               ;  row 1 (text)
+000910  2  5D 01 20 01  .byte "|",1," ",1,"F",1,"i",1,"l",1,"e",1," ",1," ",1," ",1," ",1,"|",1," ",1
+000914  2  46 01 09 01  
+000918  2  0C 01 05 01  
+000928  2  56 01 09 01  .byte "V",1,"i",1,"e",1,"w",1," ",1," ",1," ",1," ",1,"|",1," ",1
+00092C  2  05 01 17 01  
+000930  2  20 01 20 01  
+00093C  2  4F 01 10 01  .byte "O",1,"p",1,"t",1,"i",1,"o",1,"n",1,"s",1," ",1,"|",1
+000940  2  14 01 09 01  
+000944  2  0F 01 0E 01  
+00094E  2  20 01 20 01  .repeat 13
+000952  2  20 01 20 01  
+000956  2  20 01 20 01  
+000968  2                  .byte " ",1
+000968  2               .endrepeat
+000968  2  58 01 31 01  .byte "X",1,"1",1,"6",1," ",1,"T",1,"i",1,"l",1,"e",1," ",1,"E",1,"d",1,"i",1,"t",1,"o",1,"r",1
+00096C  2  36 01 20 01  
+000970  2  54 01 09 01  
+000986  2  20 01 20 01  .repeat 12
+00098A  2  20 01 20 01  
+00098E  2  20 01 20 01  
+00099E  2                  .byte " ",1
+00099E  2               .endrepeat
+00099E  2  5D 01 20 01  .byte "|",1," ",1,"A",1,"b",1,"o",1,"u",1,"t",1," ",1,"|",1
+0009A2  2  41 01 02 01  
+0009A6  2  0F 01 15 01  
+0009B0  2  00 00 00 00  .repeat 96
+0009B4  2  00 00 00 00  
+0009B8  2  00 00 00 00  
+000A10  2                  .byte 0 ; offscreen
+000A10  2               .endrepeat
+000A10  2               ;  row 2 (bottom border)
+000A10  2  6D 01        .byte $6d,1
+000A12  2  40 01 40 01  .repeat 2
+000A16  2  40 01 40 01  
+000A1A  2  40 01 40 01  
+000A3A  2                  .repeat 9
+000A3A  2                     .byte $40,1
+000A3A  2                  .endrepeat
+000A3A  2                  .byte $71,1
+000A3A  2               .endrepeat
+000A3A  2  40 01 40 01  .repeat 9
+000A3E  2  40 01 40 01  
+000A42  2  40 01 40 01  
+000A4C  2                  .byte $40,1
+000A4C  2               .endrepeat
+000A4C  2  7D 01        .byte $7d,1
+000A4E  2  20 01 20 01  .repeat 40
+000A52  2  20 01 20 01  
+000A56  2  20 01 20 01  
+000A9E  2                  .byte " ",1
+000A9E  2               .endrepeat
+000A9E  2  6D 01        .byte $6d,1
+000AA0  2  40 01 40 01  .repeat 7
+000AA4  2  40 01 40 01  
+000AA8  2  40 01 40 01  
+000AAE  2                  .byte $40,1
+000AAE  2               .endrepeat
+000AAE  2  7D 01        .byte $7d,1
+000AB0  2  00 00 00 00  .repeat 96
+000AB4  2  00 00 00 00  
+000AB8  2  00 00 00 00  
+000B10  2                  .byte 0 ; offscreen
+000B10  2               .endrepeat
+000B10  2               ; index controls
+000B10  2  20 01 20 01  .repeat 20
+000B14  2  20 01 20 01  
+000B18  2  20 01 20 01  
+000B38  2                  .byte " ",1
+000B38  2               .endrepeat
+000B38  2  3C 01 3C 01  .byte "<",1,"<",1," ",1,"P",1,"r",1,"e",1,"v",1,"i",1,"o",1,"u",1,"s",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1
+000B3C  2  20 01 50 01  
+000B40  2  12 01 05 01  
+000B5C  2  50 01 01 01  .byte "P",1,"a",1,"l",1,"e",1,"t",1,"t",1,"e",1," ",1,"O",1,"f",1,"f",1,"s",1,"e",1,"t",1,":",1," ",1
+000B60  2  0C 01 05 01  
+000B64  2  14 01 14 01  
+000B7C  2  2D 01 20 01  .byte "-",1," ",1,"0",1,"+",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1
+000B80  2  30 01 2B 01  
+000B84  2  20 01 20 01  
+000BA0  2  4E 01 05 01  .byte "N",1,"e",1,"x",1,"t",1," ",1,">",1,">",1," ",1
+000BA4  2  18 01 14 01  
+000BA8  2  20 01 3E 01  
+000BB0  2  00 00 00 00  .repeat 96
+000BB4  2  00 00 00 00  
+000BB8  2  00 00 00 00  
+000C10  2                  .byte 0 ; offscreen
+000C10  2               .endrepeat
+000C10  2               ; window upper borders
+000C10  2  70 01 40 01  .byte $70,1,$40,1,$40,1,$40,1," ",1,"P",1,"a",1,"l",1,"e",1,"t",1,"t",1,"e",1," ",1,$40,1,$40,1,$40,1,$40,1,$6e,1," ",1,$70,1
+000C14  2  40 01 40 01  
+000C18  2  20 01 50 01  
+000C38  2  40 01 40 01  .repeat 23
+000C3C  2  40 01 40 01  
+000C40  2  40 01 40 01  
+000C66  2                  .byte $40,1
+000C66  2               .endrepeat
+000C66  2  20 01 54 01  .byte " ",1,"T",1,"i",1,"l",1,"e",1," ",1," ",1," ",1," ",1,"0",1," ",1
+000C6A  2  09 01 0C 01  
+000C6E  2  05 01 20 01  
+000C7C  2  40 01 40 01  .repeat 23
+000C80  2  40 01 40 01  
+000C84  2  40 01 40 01  
+000CAA  2                  .byte $40,1
+000CAA  2               .endrepeat
+000CAA  2  72 01 40 01  .byte $72,1,$40,1,$6e,1
+000CAE  2  6E 01        
+000CB0  2  00 00 00 00  .repeat 96
+000CB4  2  00 00 00 00  
+000CB8  2  00 00 00 00  
+000D10  2                  .byte 0 ; offscreen
+000D10  2               .endrepeat
+000D10  2               ; mid-windows
+000D10  2  5D 01 A0 00  .byte "|",1,$A0,0,$A0,1,$A0,2,$A0,3,$A0,4,$A0,5,$A0,6,$A0,7,$A0,8,$A0,9,$A0,$a,$A0,$b,$A0,$c,$A0,$d,$A0,$e,$A0,$f,"|",1," ",1,"|",1
+000D14  2  A0 01 A0 02  
+000D18  2  A0 03 A0 04  
+000D38  2  A0 00 A0 00  .repeat 57
+000D3C  2  A0 00 A0 00  
+000D40  2  A0 00 A0 00  
+000DAA  2                  .byte $A0,0
+000DAA  2               .endrepeat
+000DAA  2  5D 01 F1 01  .byte "|",1,$f1,1,"|",1
+000DAE  2  5D 01        
+000DB0  2  00 00 00 00  .repeat 96
+000DB4  2  00 00 00 00  
+000DB8  2  00 00 00 00  
+000E10  2                  .byte 0 ; offscreen
+000E10  2               .endrepeat
+000E10  2  5D 01 A0 10  .byte "|",1,$A0,$10,$A0,$11,$A0,$12,$A0,$13,$A0,$14,$A0,$15,$A0,$16,$A0,$17,$A0,$18,$A0,$19,$A0,$1a,$A0,$1b,$A0,$1c,$A0,$1d,$A0,$1e,$A0,$1f,"|",1," ",1,"|",1
+000E14  2  A0 11 A0 12  
+000E18  2  A0 13 A0 14  
+000E38  2  A0 00 A0 00  .repeat 57
+000E3C  2  A0 00 A0 00  
+000E40  2  A0 00 A0 00  
+000EAA  2                  .byte $A0,0
+000EAA  2               .endrepeat
+000EAA  2  5D 01 5E 01  .byte "|",1,$5e,1,"|",1
+000EAE  2  5D 01        
+000EB0  2  00 00 00 00  .repeat 96
+000EB4  2  00 00 00 00  
+000EB8  2  00 00 00 00  
+000F10  2                  .byte 0 ; offscreen
+000F10  2               .endrepeat
+000F10  2  5D 01 A0 20  .byte "|",1,$A0,$20,$A0,$21,$A0,$22,$A0,$23,$A0,$24,$A0,$25,$A0,$26,$A0,$27,$A0,$28,$A0,$29,$A0,$2a,$A0,$2b,$A0,$2c,$A0,$2d,$A0,$2e,$A0,$2f,"|",1," ",1,"|",1
+000F14  2  A0 21 A0 22  
+000F18  2  A0 23 A0 24  
+000F38  2  A0 00 A0 00  .repeat 57
+000F3C  2  A0 00 A0 00  
+000F40  2  A0 00 A0 00  
+000FAA  2                  .byte $A0,0
+000FAA  2               .endrepeat
+000FAA  2  5D 01 5E 01  .byte "|",1,$5e,1,"|",1
+000FAE  2  5D 01        
+000FB0  2  00 00 00 00  .repeat 96
+000FB4  2  00 00 00 00  
+000FB8  2  00 00 00 00  
+001010  2                  .byte 0 ; offscreen
+001010  2               .endrepeat
+001010  2  5D 01 A0 30  .byte "|",1,$A0,$30,$A0,$31,$A0,$32,$A0,$33,$A0,$34,$A0,$35,$A0,$36,$A0,$37,$A0,$38,$A0,$39,$A0,$3a,$A0,$3b,$A0,$3c,$A0,$3d,$A0,$3e,$A0,$3f,"|",1," ",1,"|",1
+001014  2  A0 31 A0 32  
+001018  2  A0 33 A0 34  
+001038  2  A0 00 A0 00  .repeat 57
+00103C  2  A0 00 A0 00  
+001040  2  A0 00 A0 00  
+0010AA  2                  .byte $A0,0
+0010AA  2               .endrepeat
+0010AA  2  5D 01 5E 01  .byte "|",1,$5e,1,"|",1
+0010AE  2  5D 01        
+0010B0  2  00 00 00 00  .repeat 96
+0010B4  2  00 00 00 00  
+0010B8  2  00 00 00 00  
+001110  2                  .byte 0 ; offscreen
+001110  2               .endrepeat
+001110  2  5D 01 A0 40  .byte "|",1,$A0,$40,$A0,$41,$A0,$42,$A0,$43,$A0,$44,$A0,$45,$A0,$46,$A0,$47,$A0,$48,$A0,$49,$A0,$4a,$A0,$4b,$A0,$4c,$A0,$4d,$A0,$4e,$A0,$4f,"|",1," ",1,"|",1
+001114  2  A0 41 A0 42  
+001118  2  A0 43 A0 44  
+001138  2  A0 00 A0 00  .repeat 57
+00113C  2  A0 00 A0 00  
+001140  2  A0 00 A0 00  
+0011AA  2                  .byte $A0,0
+0011AA  2               .endrepeat
+0011AA  2  5D 01 5E 01  .byte "|",1,$5e,1,"|",1
+0011AE  2  5D 01        
+0011B0  2  00 00 00 00  .repeat 96
+0011B4  2  00 00 00 00  
+0011B8  2  00 00 00 00  
+001210  2                  .byte 0 ; offscreen
+001210  2               .endrepeat
+001210  2  5D 01 A0 50  .byte "|",1,$A0,$50,$A0,$51,$A0,$52,$A0,$53,$A0,$54,$A0,$55,$A0,$56,$A0,$57,$A0,$58,$A0,$59,$A0,$5a,$A0,$5b,$A0,$5c,$A0,$5d,$A0,$5e,$A0,$5f,"|",1," ",1,"|",1
+001214  2  A0 51 A0 52  
+001218  2  A0 53 A0 54  
+001238  2  A0 00 A0 00  .repeat 57
+00123C  2  A0 00 A0 00  
+001240  2  A0 00 A0 00  
+0012AA  2                  .byte $A0,0
+0012AA  2               .endrepeat
+0012AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0012AE  2  5D 01        
+0012B0  2  00 00 00 00  .repeat 96
+0012B4  2  00 00 00 00  
+0012B8  2  00 00 00 00  
+001310  2                  .byte 0 ; offscreen
+001310  2               .endrepeat
+001310  2  5D 01 A0 60  .byte "|",1,$A0,$60,$A0,$61,$A0,$62,$A0,$63,$A0,$64,$A0,$65,$A0,$66,$A0,$67,$A0,$68,$A0,$69,$A0,$6a,$A0,$6b,$A0,$6c,$A0,$6d,$A0,$6e,$A0,$6f,"|",1," ",1,"|",1
+001314  2  A0 61 A0 62  
+001318  2  A0 63 A0 64  
+001338  2  A0 00 A0 00  .repeat 57
+00133C  2  A0 00 A0 00  
+001340  2  A0 00 A0 00  
+0013AA  2                  .byte $A0,0
+0013AA  2               .endrepeat
+0013AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0013AE  2  5D 01        
+0013B0  2  00 00 00 00  .repeat 96
+0013B4  2  00 00 00 00  
+0013B8  2  00 00 00 00  
+001410  2                  .byte 0 ; offscreen
+001410  2               .endrepeat
+001410  2  5D 01 A0 70  .byte "|",1,$A0,$70,$A0,$71,$A0,$72,$A0,$73,$A0,$74,$A0,$75,$A0,$76,$A0,$77,$A0,$78,$A0,$79,$A0,$7a,$A0,$7b,$A0,$7c,$A0,$7d,$A0,$7e,$A0,$7f,"|",1," ",1,"|",1
+001414  2  A0 71 A0 72  
+001418  2  A0 73 A0 74  
+001438  2  A0 00 A0 00  .repeat 57
+00143C  2  A0 00 A0 00  
+001440  2  A0 00 A0 00  
+0014AA  2                  .byte $A0,0
+0014AA  2               .endrepeat
+0014AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0014AE  2  5D 01        
+0014B0  2  00 00 00 00  .repeat 96
+0014B4  2  00 00 00 00  
+0014B8  2  00 00 00 00  
+001510  2                  .byte 0 ; offscreen
+001510  2               .endrepeat
+001510  2  5D 01 A0 80  .byte "|",1,$A0,$80,$A0,$81,$A0,$82,$A0,$83,$A0,$84,$A0,$85,$A0,$86,$A0,$87,$A0,$88,$A0,$89,$A0,$8a,$A0,$8b,$A0,$8c,$A0,$8d,$A0,$8e,$A0,$8f,"|",1," ",1,"|",1
+001514  2  A0 81 A0 82  
+001518  2  A0 83 A0 84  
+001538  2  A0 00 A0 00  .repeat 57
+00153C  2  A0 00 A0 00  
+001540  2  A0 00 A0 00  
+0015AA  2                  .byte $A0,0
+0015AA  2               .endrepeat
+0015AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0015AE  2  5D 01        
+0015B0  2  00 00 00 00  .repeat 96
+0015B4  2  00 00 00 00  
+0015B8  2  00 00 00 00  
+001610  2                  .byte 0 ; offscreen
+001610  2               .endrepeat
+001610  2  5D 01 A0 90  .byte "|",1,$A0,$90,$A0,$91,$A0,$92,$A0,$93,$A0,$94,$A0,$95,$A0,$96,$A0,$97,$A0,$98,$A0,$99,$A0,$9a,$A0,$9b,$A0,$9c,$A0,$9d,$A0,$9e,$A0,$9f,"|",1," ",1,"|",1
+001614  2  A0 91 A0 92  
+001618  2  A0 93 A0 94  
+001638  2  A0 00 A0 00  .repeat 57
+00163C  2  A0 00 A0 00  
+001640  2  A0 00 A0 00  
+0016AA  2                  .byte $A0,0
+0016AA  2               .endrepeat
+0016AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0016AE  2  5D 01        
+0016B0  2  00 00 00 00  .repeat 96
+0016B4  2  00 00 00 00  
+0016B8  2  00 00 00 00  
+001710  2                  .byte 0 ; offscreen
+001710  2               .endrepeat
+001710  2  5D 01 A0 A0  .byte "|",1,$A0,$a0,$A0,$a1,$A0,$a2,$A0,$a3,$A0,$a4,$A0,$a5,$A0,$a6,$A0,$a7,$A0,$a8,$A0,$a9,$A0,$aa,$A0,$ab,$A0,$ac,$A0,$ad,$A0,$ae,$A0,$af,"|",1," ",1,"|",1
+001714  2  A0 A1 A0 A2  
+001718  2  A0 A3 A0 A4  
+001738  2  A0 00 A0 00  .repeat 57
+00173C  2  A0 00 A0 00  
+001740  2  A0 00 A0 00  
+0017AA  2                  .byte $A0,0
+0017AA  2               .endrepeat
+0017AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0017AE  2  5D 01        
+0017B0  2  00 00 00 00  .repeat 96
+0017B4  2  00 00 00 00  
+0017B8  2  00 00 00 00  
+001810  2                  .byte 0 ; offscreen
+001810  2               .endrepeat
+001810  2  5D 01 A0 B0  .byte "|",1,$A0,$b0,$A0,$b1,$A0,$b2,$A0,$b3,$A0,$b4,$A0,$b5,$A0,$b6,$A0,$b7,$A0,$b8,$A0,$b9,$A0,$ba,$A0,$bb,$A0,$bc,$A0,$bd,$A0,$be,$A0,$bf,"|",1," ",1,"|",1
+001814  2  A0 B1 A0 B2  
+001818  2  A0 B3 A0 B4  
+001838  2  A0 00 A0 00  .repeat 57
+00183C  2  A0 00 A0 00  
+001840  2  A0 00 A0 00  
+0018AA  2                  .byte $A0,0
+0018AA  2               .endrepeat
+0018AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0018AE  2  5D 01        
+0018B0  2  00 00 00 00  .repeat 96
+0018B4  2  00 00 00 00  
+0018B8  2  00 00 00 00  
+001910  2                  .byte 0 ; offscreen
+001910  2               .endrepeat
+001910  2  5D 01 A0 C0  .byte "|",1,$A0,$c0,$A0,$c1,$A0,$c2,$A0,$c3,$A0,$c4,$A0,$c5,$A0,$c6,$A0,$c7,$A0,$c8,$A0,$c9,$A0,$ca,$A0,$cb,$A0,$cc,$A0,$cd,$A0,$ce,$A0,$cf,"|",1," ",1,"|",1
+001914  2  A0 C1 A0 C2  
+001918  2  A0 C3 A0 C4  
+001938  2  A0 00 A0 00  .repeat 57
+00193C  2  A0 00 A0 00  
+001940  2  A0 00 A0 00  
+0019AA  2                  .byte $A0,0
+0019AA  2               .endrepeat
+0019AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0019AE  2  5D 01        
+0019B0  2  00 00 00 00  .repeat 96
+0019B4  2  00 00 00 00  
+0019B8  2  00 00 00 00  
+001A10  2                  .byte 0 ; offscreen
+001A10  2               .endrepeat
+001A10  2  5D 01 A0 D0  .byte "|",1,$A0,$d0,$A0,$d1,$A0,$d2,$A0,$d3,$A0,$d4,$A0,$d5,$A0,$d6,$A0,$d7,$A0,$d8,$A0,$d9,$A0,$da,$A0,$db,$A0,$dc,$A0,$dd,$A0,$de,$A0,$df,"|",1," ",1,"|",1
+001A14  2  A0 D1 A0 D2  
+001A18  2  A0 D3 A0 D4  
+001A38  2  A0 00 A0 00  .repeat 57
+001A3C  2  A0 00 A0 00  
+001A40  2  A0 00 A0 00  
+001AAA  2                  .byte $A0,0
+001AAA  2               .endrepeat
+001AAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001AAE  2  5D 01        
+001AB0  2  00 00 00 00  .repeat 96
+001AB4  2  00 00 00 00  
+001AB8  2  00 00 00 00  
+001B10  2                  .byte 0 ; offscreen
+001B10  2               .endrepeat
+001B10  2  5D 01 A0 E0  .byte "|",1,$A0,$e0,$A0,$e1,$A0,$e2,$A0,$e3,$A0,$e4,$A0,$e5,$A0,$e6,$A0,$e7,$A0,$e8,$A0,$e9,$A0,$ea,$A0,$eb,$A0,$ec,$A0,$ed,$A0,$ee,$A0,$ef,"|",1," ",1,"|",1
+001B14  2  A0 E1 A0 E2  
+001B18  2  A0 E3 A0 E4  
+001B38  2  A0 00 A0 00  .repeat 57
+001B3C  2  A0 00 A0 00  
+001B40  2  A0 00 A0 00  
+001BAA  2                  .byte $A0,0
+001BAA  2               .endrepeat
+001BAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001BAE  2  5D 01        
+001BB0  2  00 00 00 00  .repeat 96
+001BB4  2  00 00 00 00  
+001BB8  2  00 00 00 00  
+001C10  2                  .byte 0 ; offscreen
+001C10  2               .endrepeat
+001C10  2  5D 01 A0 F0  .byte "|",1,$A0,$f0,$A0,$f1,$A0,$f2,$A0,$f3,$A0,$f4,$A0,$f5,$A0,$f6,$A0,$f7,$A0,$f8,$A0,$f9,$A0,$fa,$A0,$fb,$A0,$fc,$A0,$fd,$A0,$fe,$A0,$ff,"|",1," ",1,"|",1
+001C14  2  A0 F1 A0 F2  
+001C18  2  A0 F3 A0 F4  
+001C38  2  A0 00 A0 00  .repeat 57
+001C3C  2  A0 00 A0 00  
+001C40  2  A0 00 A0 00  
+001CAA  2                  .byte $A0,0
+001CAA  2               .endrepeat
+001CAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001CAE  2  5D 01        
+001CB0  2  00 00 00 00  .repeat 96
+001CB4  2  00 00 00 00  
+001CB8  2  00 00 00 00  
+001D10  2                  .byte 0 ; offscreen
+001D10  2               .endrepeat
+001D10  2               ; bottom of palette window
+001D10  2  6D 01        .byte $6d,1
+001D12  2  40 01 40 01  .repeat 16
+001D16  2  40 01 40 01  
+001D1A  2  40 01 40 01  
+001D32  2                  .byte $40,1
+001D32  2               .endrepeat
+001D32  2  7D 01 20 01  .byte $7d,1," ",1,"|",1
+001D36  2  5D 01        
+001D38  2  A0 00 A0 00  .repeat 57
+001D3C  2  A0 00 A0 00  
+001D40  2  A0 00 A0 00  
+001DAA  2                  .byte $A0,0
+001DAA  2               .endrepeat
+001DAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001DAE  2  5D 01        
+001DB0  2  00 00 00 00  .repeat 96
+001DB4  2  00 00 00 00  
+001DB8  2  00 00 00 00  
+001E10  2                  .byte 0 ; offscreen
+001E10  2               .endrepeat
+001E10  2               ; between palette and preview windows
+001E10  2  20 01 20 01  .repeat 19
+001E14  2  20 01 20 01  
+001E18  2  20 01 20 01  
+001E36  2                  .byte " ",1
+001E36  2               .endrepeat
+001E36  2  5D 01        .byte "|",1
+001E38  2  A0 00 A0 00  .repeat 57
+001E3C  2  A0 00 A0 00  
+001E40  2  A0 00 A0 00  
+001EAA  2                  .byte $A0,0
+001EAA  2               .endrepeat
+001EAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001EAE  2  5D 01        
+001EB0  2  00 00 00 00  .repeat 96
+001EB4  2  00 00 00 00  
+001EB8  2  00 00 00 00  
+001F10  2                  .byte 0 ; offscreen
+001F10  2               .endrepeat
+001F10  2               ; top of preview window
+001F10  2  70 01 40 01  .byte $70,1,$40,1,$40,1,$40,1,$40,1," ",1,"P",1,"r",1,"e",1,"v",1,"i",1,"e",1,"w",1," ",1,$40,1,$40,1,$40,1,$6e,1," ",1,"|",1
+001F14  2  40 01 40 01  
+001F18  2  40 01 20 01  
+001F38  2  A0 00 A0 00  .repeat 57
+001F3C  2  A0 00 A0 00  
+001F40  2  A0 00 A0 00  
+001FAA  2                  .byte $A0,0
+001FAA  2               .endrepeat
+001FAA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+001FAE  2  5D 01        
+001FB0  2  00 00 00 00  .repeat 96
+001FB4  2  00 00 00 00  
+001FB8  2  00 00 00 00  
+002010  2                  .byte 0 ; offscreen
+002010  2               .endrepeat
+002010  2               ; mid-windows
+002010  2  5D 01 A0 00  .repeat 8
+002014  2  A0 00 A0 00  
+002018  2  A0 00 A0 00  
+002810  2                  .byte "|",1
+002810  2                  .repeat 16
+002810  2                     .byte $A0,0
+002810  2                  .endrepeat
+002810  2                  .byte "|",1," ",1,"|",1
+002810  2                  .repeat 57
+002810  2                     .byte $A0,0
+002810  2                  .endrepeat
+002810  2                  .byte "|",1," ",1,"|",1
+002810  2                  .repeat 96
+002810  2                     .byte 0 ; offscreen
+002810  2                  .endrepeat
+002810  2               .endrepeat
+002810  2               ; bottom preview window
+002810  2  6D 01        .byte $6d,1
+002812  2  40 01 40 01  .repeat 16
+002816  2  40 01 40 01  
+00281A  2  40 01 40 01  
+002832  2                  .byte $40,1
+002832  2               .endrepeat
+002832  2  7D 01 20 01  .byte $7d,1," ",1,"|",1
+002836  2  5D 01        
+002838  2  A0 00 A0 00  .repeat 57
+00283C  2  A0 00 A0 00  
+002840  2  A0 00 A0 00  
+0028AA  2                  .byte $A0,0
+0028AA  2               .endrepeat
+0028AA  2  5D 01 20 01  .byte "|",1," ",1,"|",1
+0028AE  2  5D 01        
+0028B0  2  00 00 00 00  .repeat 96
+0028B4  2  00 00 00 00  
+0028B8  2  00 00 00 00  
+002910  2                  .byte 0 ; offscreen
+002910  2               .endrepeat
+002910  2               ; mid-window
+002910  2  20 01 20 01  .repeat 24
+002914  2  20 01 20 01  
+002918  2  20 01 20 01  
+004110  2                  .repeat 19
+004110  2                     .byte " ",1
+004110  2                  .endrepeat
+004110  2                  .byte "|",1
+004110  2                  .repeat 57
+004110  2                     .byte $A0,0
+004110  2                  .endrepeat
+004110  2                  .byte "|",1," ",1,"|",1
+004110  2                  .repeat 96
+004110  2                     .byte 0 ; offscreen
+004110  2                  .endrepeat
+004110  2               .endrepeat
+004110  2               ; bottom scrollbar
+004110  2               ;   row 77 - top
+004110  2  20 01 20 01  .repeat 19
+004114  2  20 01 20 01  
+004118  2  20 01 20 01  
+004136  2                  .byte " ",1
+004136  2               .endrepeat
+004136  2  6B 01        .byte $6b,1
+004138  2  40 01 40 01  .repeat 57
+00413C  2  40 01 40 01  
+004140  2  40 01 40 01  
+0041AA  2                  .byte $40,1
+0041AA  2               .endrepeat
+0041AA  2  73 01 F2 01  .byte $73,1,$f2,1,"|",1
+0041AE  2  5D 01        
+0041B0  2  00 00 00 00  .repeat 96
+0041B4  2  00 00 00 00  
+0041B8  2  00 00 00 00  
+004210  2                  .byte 0 ; offscreen
+004210  2               .endrepeat
+004210  2               ;  row 78 - middle
+004210  2  20 01 20 01  .repeat 19
+004214  2  20 01 20 01  
+004218  2  20 01 20 01  
+004236  2                  .byte " ",1
+004236  2               .endrepeat
+004236  2  5D 01 3C 01  .byte "|",1,"<",1,$5e,1,$5e,1,$5e,1,$5e,1
+00423A  2  5E 01 5E 01  
+00423E  2  5E 01 5E 01  
+004242  2  20 01 20 01  .repeat 51
+004246  2  20 01 20 01  
+00424A  2  20 01 20 01  
+0042A8  2                  .byte " ",1
+0042A8  2               .endrepeat
+0042A8  2  3E 01 5D 01  .byte ">",1,"|",1," ",1,"|",1
+0042AC  2  20 01 5D 01  
+0042B0  2  00 00 00 00  .repeat 96
+0042B4  2  00 00 00 00  
+0042B8  2  00 00 00 00  
+004310  2                  .byte 0 ; offscreen
+004310  2               .endrepeat
+004310  2               ; row 79 - bottom
+004310  2  20 01 20 01  .repeat 19
+004314  2  20 01 20 01  
+004318  2  20 01 20 01  
+004336  2                  .byte " ",1
+004336  2               .endrepeat
+004336  2  6D 01        .byte $6d,1
+004338  2  40 01 40 01  .repeat 57
+00433C  2  40 01 40 01  
+004340  2  40 01 40 01  
+0043AA  2                  .byte $40,1
+0043AA  2               .endrepeat
+0043AA  2  71 01 40 01  .byte $71,1,$40,1,$7d,1
+0043AE  2  7D 01        
+0043B0  2               end_initscreen:
+0043B0  2               
+0043B0  2               load_initscreen:
+0043B0  2  A9 0E           lda #$0E  ; go to lowercase
+0043B2  2  20 D2 FF        jsr CHROUT
+0043B5  2                  ; TODO: make sure that layer 1 is moved to default position
+0043B5  2  A9 68           lda #$68 ; 128x64 T256C
+0043B7  2  8D 34 9F        sta VERA_L1_config
+0043BA  2  9C 25 9F        stz VERA_ctrl
+0043BD  2  A9 11           lda #$11 ; stride = 1, address = $1B000
+0043BF  2  8D 22 9F        sta VERA_addr_bank
+0043C2  2  A9 B0           lda #$B0
+0043C4  2  8D 21 9F        sta VERA_addr_high
+0043C7  2  9C 20 9F        stz VERA_addr_low
+0043CA  2  A9 10           lda #<initscreen
+0043CC  2  85 7E           sta ZP_PTR_1
+0043CE  2  A9 08           lda #>initscreen
+0043D0  2  85 7F           sta ZP_PTR_1+1
+0043D2  2  A0 00           ldy #0
+0043D4  2               @loop:
+0043D4  2  B1 7E           lda (ZP_PTR_1),y
+0043D6  2  8D 23 9F        sta VERA_data0
+0043D9  2  C8              iny
+0043DA  2  D0 F8           bne @loop
+0043DC  2  A5 7F           lda ZP_PTR_1+1
+0043DE  2  C9 43           cmp #>end_initscreen
+0043E0  2  F0 04           beq @return
+0043E2  2  E6 7F           inc ZP_PTR_1+1
+0043E4  2  80 EE           bra @loop
+0043E6  2               @return:
+0043E6  2  60              rts
+0043E7  2               
+0043E7  1               
+0043E7  1               start:
+0043E7  1  20 B0 43        jsr load_initscreen
+0043EA  1               @loop:
+0043EA  1  CB              wai
+0043EB  1  80 FD           bra @loop
+0043ED  1  60              rts
+0043ED  1               

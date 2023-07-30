@@ -1,0 +1,61 @@
+.ifndef CHARMAP_INC
+CHARMAP_INC = 1
+
+; ASCII-Screen Code character map
+.charmap $40, $00
+.charmap $41, $41
+.charmap $42, $42
+.charmap $43, $43
+.charmap $44, $44
+.charmap $45, $45
+.charmap $46, $46
+.charmap $47, $47
+.charmap $48, $48
+.charmap $49, $49
+.charmap $4a, $4a
+.charmap $4b, $4b
+.charmap $4c, $4c
+.charmap $4d, $4d
+.charmap $4e, $4e
+.charmap $4f, $4f
+.charmap $50, $50
+.charmap $51, $51
+.charmap $52, $52
+.charmap $53, $53
+.charmap $54, $54
+.charmap $55, $55
+.charmap $56, $56
+.charmap $57, $57
+.charmap $58, $58
+.charmap $59, $59
+.charmap $5a, $5a
+.charmap $5f, $64
+.charmap $61, $01
+.charmap $62, $02
+.charmap $63, $03
+.charmap $64, $04
+.charmap $65, $05
+.charmap $66, $06
+.charmap $67, $07
+.charmap $68, $08
+.charmap $69, $09
+.charmap $6a, $0a
+.charmap $6b, $0b
+.charmap $6c, $0c
+.charmap $6d, $0d
+.charmap $6e, $0e
+.charmap $6f, $0f
+.charmap $70, $10
+.charmap $71, $11
+.charmap $72, $12
+.charmap $73, $13
+.charmap $74, $14
+.charmap $75, $15
+.charmap $76, $16
+.charmap $77, $17
+.charmap $78, $18
+.charmap $79, $19
+.charmap $7a, $1a
+.charmap $7c, $5d
+
+.endif
