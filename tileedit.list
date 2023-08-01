@@ -8,7 +8,7 @@ Current file: main.asm
 00080D  1               .segment "ONCE"
 00080D  1               .segment "CODE"
 00080D  1               
-00080D  1  4C BE 1B        jmp start
+00080D  1  4C E5 1B        jmp start
 000810  1               
 000810  1               .include "x16.inc"
 000810  2               .ifndef X16_INC
@@ -354,793 +354,974 @@ Current file: main.asm
 000810  2               
 000810  2               .endif
 000810  2               
-000810  1               .include "initscreen.asm"
-000810  2               initscreen:
-000810  2               ; menu bar
-000810  2               ;  row 0 (upper border)
-000810  2  70           .byte $70
-000811  2  40 40 40 40  .repeat 3
-000815  2  40 40 40 40  
-000819  2  40 72 40 40  
-00082F  2                  .repeat 9
-00082F  2                     .byte $40
-00082F  2                  .endrepeat
-00082F  2                  .byte $72
-00082F  2               .endrepeat
-00082F  2  40 40 40 40  .repeat 40
-000833  2  40 40 40 40  
-000837  2  40 40 40 40  
-000857  2                  .byte $40
-000857  2               .endrepeat
-000857  2  72           .byte $72
-000858  2  40 40 40 40  .repeat 7
-00085C  2  40 40 40     
-00085F  2                  .byte $40
-00085F  2               .endrepeat
-00085F  2  6E           .byte $6E
-000860  2               
-000860  2               ;  row 1 (text)
-000860  2  5D 20 46 09  .byte "| File    | View    | Options |"
-000864  2  0C 05 20 20  
-000868  2  20 20 5D 20  
-00087F  2  20 20 20 20  .repeat 13
-000883  2  20 20 20 20  
-000887  2  20 20 20 20  
-00088C  2                  .byte " "
-00088C  2               .endrepeat
-00088C  2  58 31 36 20  .byte "X16 Tile Editor"
-000890  2  54 09 0C 05  
-000894  2  20 45 04 09  
-00089B  2  20 20 20 20  .repeat 12
-00089F  2  20 20 20 20  
-0008A3  2  20 20 20 20  
-0008A7  2                  .byte " "
-0008A7  2               .endrepeat
-0008A7  2  5D 20 41 02  .byte "| About |"
-0008AB  2  0F 15 14 20  
-0008AF  2  5D           
-0008B0  2               
-0008B0  2               ;  row 2 (bottom border)
-0008B0  2  6D           .byte $6d
-0008B1  2  40 40 40 40  .repeat 2
-0008B5  2  40 40 40 40  
-0008B9  2  40 71 40 40  
-0008C5  2                  .repeat 9
-0008C5  2                     .byte $40
-0008C5  2                  .endrepeat
-0008C5  2                  .byte $71
-0008C5  2               .endrepeat
-0008C5  2  40 40 40 40  .repeat 9
-0008C9  2  40 40 40 40  
-0008CD  2  40           
-0008CE  2                  .byte $40
+000810  1               .include "globals.asm"
+000810  2               
+000810  2               
+000810  2               sprite_mode:
+000810  2  00           .byte 0  ; 0 = tiles, 1 = tile-sized sprites, 2 = big sprites
+000811  2               
+000811  2               tile_width:
+000811  2  10           .byte 16
+000812  2               
+000812  2               tile_height:
+000812  2  10           .byte 16
+000813  2               
+000813  2               tile_index:
+000813  2  00 00        .word 0
+000815  2               
+000815  2               fg_color:
+000815  2  01           .byte 1
+000816  2               
+000816  2               bg_color:
+000816  2  00           .byte 0
+000817  2               
+000817  2               bits_per_pixel:
+000817  2  04           .byte 4
+000818  2               
+000818  2               palette_offset:
+000818  2  00           .byte 0
+000819  2               
+000819  2               ; scratch bytes
+000819  2               SB1 = $28
+000819  2               SB2 = $29
+000819  2               
+000819  2               init_globals:
+000819  2  9C 10 08        stz sprite_mode
+00081C  2  A9 10           lda #16
+00081E  2  8D 12 08        sta tile_height
+000821  2  8D 11 08        sta tile_width
+000824  2  9C 13 08        stz tile_index
+000827  2  A9 01           lda #1
+000829  2  8D 15 08        sta fg_color
+00082C  2  9C 16 08        stz bg_color
+00082F  2  A9 04           lda #4
+000831  2  8D 17 08        sta bits_per_pixel
+000834  2  9C 18 08        stz palette_offset
+000837  2               
+000837  2               
+000837  1               .include "initscreen.asm"
+000837  2               initscreen:
+000837  2               ; menu bar
+000837  2               ;  row 0 (upper border)
+000837  2  70           .byte $70
+000838  2  40 40 40 40  .repeat 3
+00083C  2  40 40 40 40  
+000840  2  40 72 40 40  
+000856  2                  .repeat 9
+000856  2                     .byte $40
+000856  2                  .endrepeat
+000856  2                  .byte $72
+000856  2               .endrepeat
+000856  2  40 40 40 40  .repeat 40
+00085A  2  40 40 40 40  
+00085E  2  40 40 40 40  
+00087E  2                  .byte $40
+00087E  2               .endrepeat
+00087E  2  72           .byte $72
+00087F  2  40 40 40 40  .repeat 7
+000883  2  40 40 40     
+000886  2                  .byte $40
+000886  2               .endrepeat
+000886  2  6E           .byte $6E
+000887  2               
+000887  2               ;  row 1 (text)
+000887  2  5D 20 46 09  .byte "| File    | View    | Options |"
+00088B  2  0C 05 20 20  
+00088F  2  20 20 5D 20  
+0008A6  2  20 20 20 20  .repeat 13
+0008AA  2  20 20 20 20  
+0008AE  2  20 20 20 20  
+0008B3  2                  .byte " "
+0008B3  2               .endrepeat
+0008B3  2  58 31 36 20  .byte "X16 Tile Editor"
+0008B7  2  54 09 0C 05  
+0008BB  2  20 45 04 09  
+0008C2  2  20 20 20 20  .repeat 12
+0008C6  2  20 20 20 20  
+0008CA  2  20 20 20 20  
+0008CE  2                  .byte " "
 0008CE  2               .endrepeat
-0008CE  2  7D           .byte $7d
-0008CF  2  20 20 20 20  .repeat 40
-0008D3  2  20 20 20 20  
-0008D7  2  20 20 20 20  
-0008F7  2                  .byte " "
-0008F7  2               .endrepeat
-0008F7  2  6D           .byte $6d
-0008F8  2  40 40 40 40  .repeat 7
-0008FC  2  40 40 40     
-0008FF  2                  .byte $40
-0008FF  2               .endrepeat
-0008FF  2  7D           .byte $7d
-000900  2               
-000900  2               ; index controls
-000900  2  20 20 20 20  .repeat 20
-000904  2  20 20 20 20  
-000908  2  20 20 20 20  
-000914  2                  .byte " "
-000914  2               .endrepeat
-000914  2  3C 3C 20 50  .byte "<< Previous       Palette Offset: - 0+              Next >> "
-000918  2  12 05 16 09  
-00091C  2  0F 15 13 20  
-000950  2               
-000950  2               ; window upper borders
-000950  2  70 40 40 40  .byte $70,$40,$40,$40,$40," Palette ",$40,$40,$40,$6e," ",$70
-000954  2  40 20 50 01  
-000958  2  0C 05 14 14  
-000964  2  40 40 40 40  .repeat 23
-000968  2  40 40 40 40  
-00096C  2  40 40 40 40  
-00097B  2                  .byte $40
-00097B  2               .endrepeat
-00097B  2  20 54 09 0C  .byte " Tile    0 "
-00097F  2  05 20 20 20  
-000983  2  20 30 20     
-000986  2  40 40 40 40  .repeat 23
-00098A  2  40 40 40 40  
-00098E  2  40 40 40 40  
-00099D  2                  .byte $40
-00099D  2               .endrepeat
-00099D  2  72 40 6E     .byte $72,$40,$6e
-0009A0  2               
-0009A0  2               ; mid-windows
-0009A0  2               
-0009A0  2  5D           .byte "|"
-0009A1  2  A0 A0 A0 A0  .repeat 16
-0009A5  2  A0 A0 A0 A0  
-0009A9  2  A0 A0 A0 A0  
-0009B1  2                  .byte $A0
-0009B1  2               .endrepeat
-0009B1  2  5D 20 5D     .byte "| |"
-0009B4  2  A0 A0 A0 A0  .repeat 57
-0009B8  2  A0 A0 A0 A0  
-0009BC  2  A0 A0 A0 A0  
-0009ED  2                  .byte $A0
-0009ED  2               .endrepeat
-0009ED  2  5D F1 5D     .byte "|",$f1,"|"
-0009F0  2               
-0009F0  2  5D A0 A0 A0  .repeat 4
-0009F4  2  A0 A0 A0 A0  
-0009F8  2  A0 A0 A0 A0  
-000B30  2                  .byte "|"
-000B30  2                  .repeat 16
-000B30  2                     .byte $A0
-000B30  2                  .endrepeat
-000B30  2                  .byte "| |"
-000B30  2                  .repeat 57
-000B30  2                     .byte $A0
-000B30  2                  .endrepeat
-000B30  2                  .byte "|",$5e,"|"
-000B30  2               .endrepeat
-000B30  2               
-000B30  2  5D A0 A0 A0  .repeat 11
-000B34  2  A0 A0 A0 A0  
-000B38  2  A0 A0 A0 A0  
-000EA0  2                  .byte "|"
-000EA0  2                  .repeat 16
-000EA0  2                     .byte $A0
-000EA0  2                  .endrepeat
-000EA0  2                  .byte "| |"
-000EA0  2                  .repeat 57
-000EA0  2                     .byte $A0
-000EA0  2                  .endrepeat
-000EA0  2                  .byte "| |"
-000EA0  2               .endrepeat
-000EA0  2               
-000EA0  2               ; bottom of palette window
-000EA0  2  6D           .byte $6d
-000EA1  2  40 40 40 40  .repeat 16
-000EA5  2  40 40 40 40  
-000EA9  2  40 40 40 40  
-000EB1  2                  .byte $40
-000EB1  2               .endrepeat
-000EB1  2  7D 20 5D     .byte $7d," |"
-000EB4  2  A0 A0 A0 A0  .repeat 57
-000EB8  2  A0 A0 A0 A0  
-000EBC  2  A0 A0 A0 A0  
-000EED  2                  .byte $A0
-000EED  2               .endrepeat
-000EED  2  5D 20 5D     .byte "| |"
-000EF0  2               
-000EF0  2               ; between palette and preview windows
-000EF0  2  20 20 70 40  .byte "  ",$70,$40,$40,$40,$6e
-000EF4  2  40 40 6E     
-000EF7  2  20 20 20 20  .repeat 4
-000EFB  2                  .byte " "
-000EFB  2               .endrepeat
-000EFB  2  70 40 40 40  .byte $70,$40,$40,$40,$6e,"   |"
-000EFF  2  6E 20 20 20  
-000F03  2  5D           
-000F04  2  A0 A0 A0 A0  .repeat 57
-000F08  2  A0 A0 A0 A0  
-000F0C  2  A0 A0 A0 A0  
-000F3D  2                  .byte $A0
-000F3D  2               .endrepeat
-000F3D  2  5D 20 5D     .byte "| |"
-000F40  2               
-000F40  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
-000F44  2  A0 A0 5D     
-000F47  2  70 40 40 6E  .byte $70,$40,$40,$6e
-000F4B  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
-000F4F  2  5D 20 20 20  
-000F53  2  5D           
-000F54  2  A0 A0 A0 A0  .repeat 57
-000F58  2  A0 A0 A0 A0  
-000F5C  2  A0 A0 A0 A0  
-000F8D  2                  .byte $A0
-000F8D  2               .endrepeat
-000F8D  2  5D 20 5D     .byte "| |"
-000F90  2               
-000F90  2               
-000F90  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
-000F94  2  A0 A0 5D     
-000F97  2  5D 3C 3E 5D  .byte "|<>|"
-000F9B  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
-000F9F  2  5D 20 20 20  
-000FA3  2  5D           
-000FA4  2  A0 A0 A0 A0  .repeat 57
-000FA8  2  A0 A0 A0 A0  
-000FAC  2  A0 A0 A0 A0  
-000FDD  2                  .byte $A0
-000FDD  2               .endrepeat
-000FDD  2  5D 20 5D     .byte "| |"
-000FE0  2               
-000FE0  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
-000FE4  2  A0 A0 5D     
-000FE7  2  6D 40 40 7D  .byte $6d,$40,$40,$7d
-000FEB  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
-000FEF  2  5D 20 20 20  
-000FF3  2  5D           
-000FF4  2  A0 A0 A0 A0  .repeat 57
-000FF8  2  A0 A0 A0 A0  
-000FFC  2  A0 A0 A0 A0  
-00102D  2                  .byte $A0
-00102D  2               .endrepeat
-00102D  2  5D 20 5D     .byte "| |"
-001030  2               
-001030  2  20 20 6B 40  .byte "  ",$6b,$40,$40,$40,$73
-001034  2  40 40 73     
-001037  2  20 20 20 20  .repeat 4
-00103B  2                  .byte " "
-00103B  2               .endrepeat
-00103B  2  6B 40 40 40  .byte $6b,$40,$40,$40,$73,"   |"
-00103F  2  73 20 20 20  
-001043  2  5D           
-001044  2  A0 A0 A0 A0  .repeat 57
-001048  2  A0 A0 A0 A0  
-00104C  2  A0 A0 A0 A0  
-00107D  2                  .byte $A0
-00107D  2               .endrepeat
-00107D  2  5D 20 5D     .byte "| |"
-001080  2               
-001080  2  20 20 5D 20  .byte "  |  1|"
-001084  2  20 31 5D     
-001087  2  20 20 20 20  .repeat 4
-00108B  2                  .byte " "
-00108B  2               .endrepeat
-00108B  2  5D 20 20 30  .byte "|  0|   |"
-00108F  2  5D 20 20 20  
-001093  2  5D           
-001094  2  A0 A0 A0 A0  .repeat 57
-001098  2  A0 A0 A0 A0  
-00109C  2  A0 A0 A0 A0  
-0010CD  2                  .byte $A0
-0010CD  2               .endrepeat
-0010CD  2  5D 20 5D     .byte "| |"
-0010D0  2               
-0010D0  2  20 20 6D 40  .byte "  ",$6d,$40,$40,$40,$7d
-0010D4  2  40 40 7D     
-0010D7  2  20 20 20 20  .repeat 4
-0010DB  2                  .byte " "
-0010DB  2               .endrepeat
-0010DB  2  6D 40 40 40  .byte $6d,$40,$40,$40,$7d,"   |"
-0010DF  2  7D 20 20 20  
-0010E3  2  5D           
-0010E4  2  A0 A0 A0 A0  .repeat 57
-0010E8  2  A0 A0 A0 A0  
-0010EC  2  A0 A0 A0 A0  
-00111D  2                  .byte $A0
-00111D  2               .endrepeat
-00111D  2  5D 20 5D     .byte "| |"
-001120  2               
-001120  2  20 70        .byte " ",$70
-001122  2  40 40 40 40  .repeat 7
-001126  2  40 40 40     
-001129  2                  .byte $40
-001129  2               .endrepeat
-001129  2  72           .byte $72
-00112A  2  40 40 40 40  .repeat 7
-00112E  2  40 40 40     
-001131  2                  .byte $40
-001131  2               .endrepeat
-001131  2  6E 20 5D     .byte $6e," |"
-001134  2  A0 A0 A0 A0  .repeat 57
-001138  2  A0 A0 A0 A0  
-00113C  2  A0 A0 A0 A0  
-00116D  2                  .byte $A0
-00116D  2               .endrepeat
-00116D  2  5D 20 5D     .byte "| |"
-001170  2               
-001170  2  20 5D 44 12  .byte " |Dropper| "
-001174  2  0F 10 10 05  
-001178  2  12 5D 20     
-00117B  2  43 0C 05 01  .byte "Clear | |"
-00117F  2  12 20 5D 20  
-001183  2  5D           
-001184  2  A0 A0 A0 A0  .repeat 57
-001188  2  A0 A0 A0 A0  
-00118C  2  A0 A0 A0 A0  
-0011BD  2                  .byte $A0
-0011BD  2               .endrepeat
-0011BD  2  5D 20 5D     .byte "| |"
-0011C0  2               
-0011C0  2  20 6B        .byte " ",$6b
-0011C2  2  40 40 40 40  .repeat 7
-0011C6  2  40 40 40     
-0011C9  2                  .byte $40
-0011C9  2               .endrepeat
-0011C9  2  5B           .byte $5b
-0011CA  2  40 40 40 40  .repeat 7
-0011CE  2  40 40 40     
-0011D1  2                  .byte $40
-0011D1  2               .endrepeat
-0011D1  2  73 20 5D     .byte $73," |"
-0011D4  2  A0 A0 A0 A0  .repeat 57
-0011D8  2  A0 A0 A0 A0  
-0011DC  2  A0 A0 A0 A0  
-00120D  2                  .byte $A0
-00120D  2               .endrepeat
-00120D  2  5D 20 5D     .byte "| |"
-001210  2               
-001210  2  20 5D 20 43  .byte " | Copy  | "
-001214  2  0F 10 19 20  
-001218  2  20 5D 20     
-00121B  2  50 01 13 14  .byte "Paste | |"
-00121F  2  05 20 5D 20  
-001223  2  5D           
-001224  2  A0 A0 A0 A0  .repeat 57
-001228  2  A0 A0 A0 A0  
-00122C  2  A0 A0 A0 A0  
-00125D  2                  .byte $A0
-00125D  2               .endrepeat
-00125D  2  5D 20 5D     .byte "| |"
-001260  2               
-001260  2  20 6D        .byte " ",$6d
-001262  2  40 40 40 40  .repeat 7
-001266  2  40 40 40     
-001269  2                  .byte $40
-001269  2               .endrepeat
-001269  2  71           .byte $71
-00126A  2  40 40 40 40  .repeat 7
-00126E  2  40 40 40     
-001271  2                  .byte $40
-001271  2               .endrepeat
-001271  2  7D 20 5D     .byte $7d," |"
-001274  2  A0 A0 A0 A0  .repeat 57
-001278  2  A0 A0 A0 A0  
-00127C  2  A0 A0 A0 A0  
-0012AD  2                  .byte $A0
-0012AD  2               .endrepeat
-0012AD  2  5D 20 5D     .byte "| |"
-0012B0  2               
-0012B0  2  20 20 20 20  .repeat 8
-0012B4  2  20 20 20 20  
-0012B8  2                  .byte " "
-0012B8  2               .endrepeat
-0012B8  2  70 40 6E     .byte $70,$40,$6e
-0012BB  2  20 20 20 20  .repeat 8
-0012BF  2  20 20 20 20  
-0012C3  2                  .byte " "
-0012C3  2               .endrepeat
-0012C3  2  5D           .byte "|"
-0012C4  2  A0 A0 A0 A0  .repeat 57
-0012C8  2  A0 A0 A0 A0  
-0012CC  2  A0 A0 A0 A0  
-0012FD  2                  .byte $A0
-0012FD  2               .endrepeat
-0012FD  2  5D 20 5D     .byte "| |"
-001300  2               
-001300  2  20 20 20 20  .repeat 8
-001304  2  20 20 20 20  
-001308  2                  .byte " "
-001308  2               .endrepeat
-001308  2  5D F1 5D     .byte "|",$f1,"|"
-00130B  2  20 20 20 20  .repeat 8
-00130F  2  20 20 20 20  
-001313  2                  .byte " "
-001313  2               .endrepeat
-001313  2  5D           .byte "|"
-001314  2  A0 A0 A0 A0  .repeat 57
-001318  2  A0 A0 A0 A0  
-00131C  2  A0 A0 A0 A0  
-00134D  2                  .byte $A0
-00134D  2               .endrepeat
-00134D  2  5D 20 5D     .byte "| |"
-001350  2               
-001350  2  20 20 20 20  .repeat 4
-001354  2                  .byte " "
-001354  2               .endrepeat
-001354  2  70 40 72 40  .byte $70,$40,$72,$40,$71,$40,$71,$40,$72,$40,$6e
-001358  2  71 40 71 40  
-00135C  2  72 40 6E     
-00135F  2  20 20 20 20  .repeat 4
-001363  2                  .byte " "
-001363  2               .endrepeat
-001363  2  5D           .byte "|"
-001364  2  A0 A0 A0 A0  .repeat 57
-001368  2  A0 A0 A0 A0  
-00136C  2  A0 A0 A0 A0  
-00139D  2                  .byte $A0
-00139D  2               .endrepeat
-00139D  2  5D 20 5D     .byte "| |"
-0013A0  2               
-0013A0  2  20 20 20 20  .repeat 4
-0013A4  2                  .byte " "
-0013A4  2               .endrepeat
-0013A4  2  5D F3 5D 53  .byte "|",$f3,"|Shift|",$f0,"|"
-0013A8  2  08 09 06 14  
-0013AC  2  5D F0 5D     
-0013AF  2  20 20 20 20  .repeat 4
-0013B3  2                  .byte " "
-0013B3  2               .endrepeat
-0013B3  2  5D           .byte "|"
-0013B4  2  A0 A0 A0 A0  .repeat 57
-0013B8  2  A0 A0 A0 A0  
-0013BC  2  A0 A0 A0 A0  
-0013ED  2                  .byte $A0
-0013ED  2               .endrepeat
-0013ED  2  5D 20 5D     .byte "| |"
-0013F0  2               
-0013F0  2  20 20 20 20  .repeat 4
-0013F4  2                  .byte " "
-0013F4  2               .endrepeat
-0013F4  2  6D 40 71 40  .byte $6d,$40,$71,$40,$72,$40,$72,$40,$71,$40,$7d
-0013F8  2  72 40 72 40  
-0013FC  2  71 40 7D     
-0013FF  2  20 20 20 20  .repeat 4
-001403  2                  .byte " "
-001403  2               .endrepeat
-001403  2  5D           .byte "|"
-001404  2  A0 A0 A0 A0  .repeat 57
-001408  2  A0 A0 A0 A0  
-00140C  2  A0 A0 A0 A0  
-00143D  2                  .byte $A0
-00143D  2               .endrepeat
-00143D  2  5D 20 5D     .byte "| |"
-001440  2               
-001440  2  20 20 20 20  .repeat 8
-001444  2  20 20 20 20  
-001448  2                  .byte " "
-001448  2               .endrepeat
-001448  2  5D F2 5D     .byte "|",$f2,"|"
-00144B  2  20 20 20 20  .repeat 8
-00144F  2  20 20 20 20  
-001453  2                  .byte " "
-001453  2               .endrepeat
-001453  2  5D           .byte "|"
-001454  2  A0 A0 A0 A0  .repeat 57
-001458  2  A0 A0 A0 A0  
-00145C  2  A0 A0 A0 A0  
-00148D  2                  .byte $A0
-00148D  2               .endrepeat
-00148D  2  5D 20 5D     .byte "| |"
-001490  2               
-001490  2  20 20 20 20  .repeat 8
-001494  2  20 20 20 20  
-001498  2                  .byte " "
-001498  2               .endrepeat
-001498  2  6D 40 7D     .byte $6d,$40,$7d
-00149B  2  20 20 20 20  .repeat 8
-00149F  2  20 20 20 20  
-0014A3  2                  .byte " "
-0014A3  2               .endrepeat
-0014A3  2  5D           .byte "|"
-0014A4  2  A0 A0 A0 A0  .repeat 57
-0014A8  2  A0 A0 A0 A0  
-0014AC  2  A0 A0 A0 A0  
-0014DD  2                  .byte $A0
-0014DD  2               .endrepeat
-0014DD  2  5D 20 5D     .byte "| |"
-0014E0  2               
-0014E0  2               ; top of preview window
-0014E0  2  70 40 40 40  .byte $70,$40,$40,$40,$40," Preview ",$40,$40,$40,$6e," |"
-0014E4  2  40 20 50 12  
-0014E8  2  05 16 09 05  
-0014F4  2  A0 A0 A0 A0  .repeat 57
-0014F8  2  A0 A0 A0 A0  
-0014FC  2  A0 A0 A0 A0  
-00152D  2                  .byte $A0
-00152D  2               .endrepeat
-00152D  2  5D 20 5D     .byte "| |"
-001530  2               
-001530  2               ; mid-windows
-001530  2  5D 20 20 20  .repeat 8
-001534  2  20 20 20 20  
-001538  2  20 20 20 20  
-0017B0  2                  .byte "|"
-0017B0  2                  .repeat 16
-0017B0  2                     .byte " "
-0017B0  2                  .endrepeat
-0017B0  2                  .byte "| |"
-0017B0  2                  .repeat 57
-0017B0  2                     .byte $A0
-0017B0  2                  .endrepeat
-0017B0  2                  .byte "| |"
-0017B0  2               .endrepeat
-0017B0  2               
-0017B0  2               ; bottom preview window
-0017B0  2  6D           .byte $6d
-0017B1  2  40 40 40 40  .repeat 16
-0017B5  2  40 40 40 40  
-0017B9  2  40 40 40 40  
-0017C1  2                  .byte $40
-0017C1  2               .endrepeat
-0017C1  2  7D 20 5D     .byte $7d," |"
-0017C4  2  A0 A0 A0 A0  .repeat 57
-0017C8  2  A0 A0 A0 A0  
-0017CC  2  A0 A0 A0 A0  
-0017FD  2                  .byte $A0
-0017FD  2               .endrepeat
-0017FD  2  5D 20 5D     .byte "| |"
-001800  2               
-001800  2  20 41 04 04  .byte " Address: $00000"
-001804  2  12 05 13 13  
-001808  2  3A 20 24 30  
-001810  2  20 20 20     .repeat 3
-001813  2                  .byte " "
-001813  2               .endrepeat
-001813  2  5D           .byte "|"
-001814  2  A0 A0 A0 A0  .repeat 57
-001818  2  A0 A0 A0 A0  
-00181C  2  A0 A0 A0 A0  
-00184D  2                  .byte $A0
-00184D  2               .endrepeat
-00184D  2  5D 20 5D     .byte "| |"
-001850  2               
-001850  2  20 57 09 04  .byte " Width:  16"
-001854  2  14 08 3A 20  
-001858  2  20 31 36     
-00185B  2  20 20 20 20  .repeat 8
-00185F  2  20 20 20 20  
-001863  2                  .byte " "
-001863  2               .endrepeat
-001863  2  5D           .byte "|"
-001864  2  A0 A0 A0 A0  .repeat 57
-001868  2  A0 A0 A0 A0  
-00186C  2  A0 A0 A0 A0  
-00189D  2                  .byte $A0
-00189D  2               .endrepeat
-00189D  2  5D 20 5D     .byte "| |"
-0018A0  2               
-0018A0  2  20 48 05 09  .byte " Height: 16"
-0018A4  2  07 08 14 3A  
-0018A8  2  20 31 36     
-0018AB  2  20 20 20 20  .repeat 8
-0018AF  2  20 20 20 20  
-0018B3  2                  .byte " "
-0018B3  2               .endrepeat
-0018B3  2  5D           .byte "|"
-0018B4  2  A0 A0 A0 A0  .repeat 57
-0018B8  2  A0 A0 A0 A0  
-0018BC  2  A0 A0 A0 A0  
-0018ED  2                  .byte $A0
-0018ED  2               .endrepeat
-0018ED  2  5D 20 5D     .byte "| |"
-0018F0  2               
-0018F0  2  20 43 0F 0C  .byte " Color Depth:  16"
-0018F4  2  0F 12 20 44  
-0018F8  2  05 10 14 08  
-001901  2  20 20        .repeat 2
-001903  2                  .byte " "
-001903  2               .endrepeat
-001903  2  5D           .byte "|"
-001904  2  A0 A0 A0 A0  .repeat 57
-001908  2  A0 A0 A0 A0  
-00190C  2  A0 A0 A0 A0  
-00193D  2                  .byte $A0
-00193D  2               .endrepeat
-00193D  2  5D 20 5D     .byte "| |"
-001940  2               
-001940  2  20 48 2D 46  .byte " H-Flip: Off"
-001944  2  0C 09 10 3A  
-001948  2  20 4F 06 06  
-00194C  2  20 20 20 20  .repeat 7
-001950  2  20 20 20     
-001953  2                  .byte " "
-001953  2               .endrepeat
-001953  2  5D           .byte "|"
-001954  2  A0 A0 A0 A0  .repeat 57
-001958  2  A0 A0 A0 A0  
-00195C  2  A0 A0 A0 A0  
-00198D  2                  .byte $A0
-00198D  2               .endrepeat
-00198D  2  5D 20 5D     .byte "| |"
-001990  2               
-001990  2  20 56 2D 46  .byte " V-Flip: Off"
-001994  2  0C 09 10 3A  
-001998  2  20 4F 06 06  
-00199C  2  20 20 20 20  .repeat 7
-0019A0  2  20 20 20     
-0019A3  2                  .byte " "
-0019A3  2               .endrepeat
-0019A3  2  5D           .byte "|"
-0019A4  2  A0 A0 A0 A0  .repeat 57
-0019A8  2  A0 A0 A0 A0  
-0019AC  2  A0 A0 A0 A0  
-0019DD  2                  .byte $A0
-0019DD  2               .endrepeat
-0019DD  2  5D F2 5D     .byte "|",$f2,"|"
-0019E0  2               
-0019E0  2               ; bottom scrollbar
-0019E0  2               ;   row 77 - top
-0019E0  2  20 20 20 20  .repeat 19
-0019E4  2  20 20 20 20  
-0019E8  2  20 20 20 20  
-0019F3  2                  .byte " "
-0019F3  2               .endrepeat
-0019F3  2  6B           .byte $6b
-0019F4  2  40 40 40 40  .repeat 57
-0019F8  2  40 40 40 40  
-0019FC  2  40 40 40 40  
-001A2D  2                  .byte $40
-001A2D  2               .endrepeat
-001A2D  2  5B 40 73     .byte $5b,$40,$73
-001A30  2               
-001A30  2               ;  row 78 - middle
-001A30  2  20 20 20 20  .repeat 19
-001A34  2  20 20 20 20  
-001A38  2  20 20 20 20  
-001A43  2                  .byte " "
-001A43  2               .endrepeat
-001A43  2  5D F3 5E 5E  .byte "|",$f3,$5e,$5e,$5e,$5e
-001A47  2  5E 5E        
-001A49  2  20 20 20 20  .repeat 51
-001A4D  2  20 20 20 20  
-001A51  2  20 20 20 20  
-001A7C  2                  .byte " "
-001A7C  2               .endrepeat
-001A7C  2  F0 5D 20 5D  .byte $f0,"| |"
-001A80  2               
-001A80  2               ; row 79 - bottom
-001A80  2  20 20 20 20  .repeat 19
-001A84  2  20 20 20 20  
-001A88  2  20 20 20 20  
-001A93  2                  .byte " "
-001A93  2               .endrepeat
-001A93  2  6D           .byte $6d
-001A94  2  40 40 40 40  .repeat 57
-001A98  2  40 40 40 40  
-001A9C  2  40 40 40 40  
-001ACD  2                  .byte $40
-001ACD  2               .endrepeat
-001ACD  2  71 40 7D     .byte $71,$40,$7d
-001AD0  2               
-001AD0  2               arrowheads:
-001AD0  2  C0           .byte %11000000
-001AD1  2  F0           .byte %11110000
-001AD2  2  FC           .byte %11111100
-001AD3  2  FF           .byte %11111111
-001AD4  2  FF           .byte %11111111
-001AD5  2  FC           .byte %11111100
-001AD6  2  F0           .byte %11110000
-001AD7  2  C0           .byte %11000000
-001AD8  2               
-001AD8  2  18           .byte %00011000
-001AD9  2  18           .byte %00011000
-001ADA  2  3C           .byte %00111100
-001ADB  2  3C           .byte %00111100
-001ADC  2  7E           .byte %01111110
-001ADD  2  7E           .byte %01111110
-001ADE  2  FF           .byte %11111111
-001ADF  2  FF           .byte %11111111
-001AE0  2               
-001AE0  2  FF           .byte %11111111
-001AE1  2  FF           .byte %11111111
-001AE2  2  7E           .byte %01111110
-001AE3  2  7E           .byte %01111110
-001AE4  2  3C           .byte %00111100
-001AE5  2  3C           .byte %00111100
-001AE6  2  18           .byte %00011000
-001AE7  2  18           .byte %00011000
-001AE8  2               
-001AE8  2  03           .byte %00000011
-001AE9  2  0F           .byte %00001111
-001AEA  2  3F           .byte %00111111
-001AEB  2  FF           .byte %11111111
-001AEC  2  FF           .byte %11111111
-001AED  2  3F           .byte %00111111
-001AEE  2  0F           .byte %00001111
-001AEF  2  03           .byte %00000011
-001AF0  2               
-001AF0  2               TEXT_START = $1B000
-001AF0  2               PAL_VIZ = TEXT_START+$503
-001AF0  2               FG_COLOR_BOX = TEXT_START+$1707
-001AF0  2               BG_COLOR_BOX = TEXT_START+$1719
-001AF0  2               
-001AF0  2               load_initscreen:
-001AF0  2  A9 0E           lda #$0E  ; go to lowercase
-001AF2  2  20 D2 FF        jsr CHROUT
-001AF5  2                  ; TODO: make sure that layer 1 is moved to default position
-001AF5  2  A9 68           lda #$68 ; 128x64 T256C
-001AF7  2  8D 34 9F        sta VERA_L1_config
-001AFA  2                  ; put arrowheads into character set
-001AFA  2  9C 25 9F        stz VERA_ctrl
-001AFD  2  A9 11 8D 22     VERA_SET_ADDR $1F780,1
-001B01  2  9F A9 F7 8D  
-001B05  2  21 9F A9 80  
-001B0C  2  A9 D0           lda #<arrowheads
-001B0E  2  85 7E           sta ZP_PTR_1
-001B10  2  A9 1A           lda #>arrowheads
-001B12  2  85 7F           sta ZP_PTR_1+1
-001B14  2  A0 00           ldy #0
-001B16  2               @ah_loop1:
-001B16  2  B1 7E           lda (ZP_PTR_1),y
-001B18  2  8D 23 9F        sta VERA_data0
-001B1B  2  C8              iny
-001B1C  2  C0 20           cpy #32
-001B1E  2  D0 F6           bne @ah_loop1
-001B20  2  A0 00           ldy #0
-001B22  2               @ah_loop2:
-001B22  2  B1 7E           lda (ZP_PTR_1),y
-001B24  2  49 FF           eor #$FF ; reverse video
-001B26  2  8D 23 9F        sta VERA_data0
-001B29  2  C8              iny
-001B2A  2  C0 20           cpy #32
-001B2C  2  D0 F4           bne @ah_loop2
-001B2E  2                  ; load into layer 1 tile map
-001B2E  2  A9 11 8D 22     VERA_SET_ADDR TEXT_START,1
-001B32  2  9F A9 B0 8D  
-001B36  2  21 9F A9 00  
-001B3D  2  A9 10           lda #<initscreen
-001B3F  2  85 7E           sta ZP_PTR_1
-001B41  2  A9 08           lda #>initscreen
-001B43  2  85 7F           sta ZP_PTR_1+1
-001B45  2  A0 00           ldy #0
-001B47  2  A2 3C           ldx #60
-001B49  2               @loop:
+0008CE  2  5D 20 41 02  .byte "| About |"
+0008D2  2  0F 15 14 20  
+0008D6  2  5D           
+0008D7  2               
+0008D7  2               ;  row 2 (bottom border)
+0008D7  2  6D           .byte $6d
+0008D8  2  40 40 40 40  .repeat 2
+0008DC  2  40 40 40 40  
+0008E0  2  40 71 40 40  
+0008EC  2                  .repeat 9
+0008EC  2                     .byte $40
+0008EC  2                  .endrepeat
+0008EC  2                  .byte $71
+0008EC  2               .endrepeat
+0008EC  2  40 40 40 40  .repeat 9
+0008F0  2  40 40 40 40  
+0008F4  2  40           
+0008F5  2                  .byte $40
+0008F5  2               .endrepeat
+0008F5  2  7D           .byte $7d
+0008F6  2  20 20 20 20  .repeat 40
+0008FA  2  20 20 20 20  
+0008FE  2  20 20 20 20  
+00091E  2                  .byte " "
+00091E  2               .endrepeat
+00091E  2  6D           .byte $6d
+00091F  2  40 40 40 40  .repeat 7
+000923  2  40 40 40     
+000926  2                  .byte $40
+000926  2               .endrepeat
+000926  2  7D           .byte $7d
+000927  2               
+000927  2               ; index controls
+000927  2  20 20 20 20  .repeat 20
+00092B  2  20 20 20 20  
+00092F  2  20 20 20 20  
+00093B  2                  .byte " "
+00093B  2               .endrepeat
+00093B  2  3C 3C 20 50  .byte "<< Previous       Palette Offset: - 0+              Next >> "
+00093F  2  12 05 16 09  
+000943  2  0F 15 13 20  
+000977  2               
+000977  2               ; window upper borders
+000977  2  70 40 40 40  .byte $70,$40,$40,$40,$40," Palette ",$40,$40,$40,$6e," ",$70
+00097B  2  40 20 50 01  
+00097F  2  0C 05 14 14  
+00098B  2  40 40 40 40  .repeat 23
+00098F  2  40 40 40 40  
+000993  2  40 40 40 40  
+0009A2  2                  .byte $40
+0009A2  2               .endrepeat
+0009A2  2  20 54 09 0C  .byte " Tile    0 "
+0009A6  2  05 20 20 20  
+0009AA  2  20 30 20     
+0009AD  2  40 40 40 40  .repeat 23
+0009B1  2  40 40 40 40  
+0009B5  2  40 40 40 40  
+0009C4  2                  .byte $40
+0009C4  2               .endrepeat
+0009C4  2  72 40 6E     .byte $72,$40,$6e
+0009C7  2               
+0009C7  2               ; mid-windows
+0009C7  2               
+0009C7  2  5D           .byte "|"
+0009C8  2  A0 A0 A0 A0  .repeat 16
+0009CC  2  A0 A0 A0 A0  
+0009D0  2  A0 A0 A0 A0  
+0009D8  2                  .byte $A0
+0009D8  2               .endrepeat
+0009D8  2  5D 20 5D     .byte "| |"
+0009DB  2  A0 A0 A0 A0  .repeat 57
+0009DF  2  A0 A0 A0 A0  
+0009E3  2  A0 A0 A0 A0  
+000A14  2                  .byte $A0
+000A14  2               .endrepeat
+000A14  2  5D F1 5D     .byte "|",$f1,"|"
+000A17  2               
+000A17  2  5D A0 A0 A0  .repeat 4
+000A1B  2  A0 A0 A0 A0  
+000A1F  2  A0 A0 A0 A0  
+000B57  2                  .byte "|"
+000B57  2                  .repeat 16
+000B57  2                     .byte $A0
+000B57  2                  .endrepeat
+000B57  2                  .byte "| |"
+000B57  2                  .repeat 57
+000B57  2                     .byte $A0
+000B57  2                  .endrepeat
+000B57  2                  .byte "|",$5e,"|"
+000B57  2               .endrepeat
+000B57  2               
+000B57  2  5D A0 A0 A0  .repeat 11
+000B5B  2  A0 A0 A0 A0  
+000B5F  2  A0 A0 A0 A0  
+000EC7  2                  .byte "|"
+000EC7  2                  .repeat 16
+000EC7  2                     .byte $A0
+000EC7  2                  .endrepeat
+000EC7  2                  .byte "| |"
+000EC7  2                  .repeat 57
+000EC7  2                     .byte $A0
+000EC7  2                  .endrepeat
+000EC7  2                  .byte "| |"
+000EC7  2               .endrepeat
+000EC7  2               
+000EC7  2               ; bottom of palette window
+000EC7  2  6D           .byte $6d
+000EC8  2  40 40 40 40  .repeat 16
+000ECC  2  40 40 40 40  
+000ED0  2  40 40 40 40  
+000ED8  2                  .byte $40
+000ED8  2               .endrepeat
+000ED8  2  7D 20 5D     .byte $7d," |"
+000EDB  2  A0 A0 A0 A0  .repeat 57
+000EDF  2  A0 A0 A0 A0  
+000EE3  2  A0 A0 A0 A0  
+000F14  2                  .byte $A0
+000F14  2               .endrepeat
+000F14  2  5D 20 5D     .byte "| |"
+000F17  2               
+000F17  2               ; between palette and preview windows
+000F17  2  20 20 70 40  .byte "  ",$70,$40,$40,$40,$6e
+000F1B  2  40 40 6E     
+000F1E  2  20 20 20 20  .repeat 4
+000F22  2                  .byte " "
+000F22  2               .endrepeat
+000F22  2  70 40 40 40  .byte $70,$40,$40,$40,$6e,"   |"
+000F26  2  6E 20 20 20  
+000F2A  2  5D           
+000F2B  2  A0 A0 A0 A0  .repeat 57
+000F2F  2  A0 A0 A0 A0  
+000F33  2  A0 A0 A0 A0  
+000F64  2                  .byte $A0
+000F64  2               .endrepeat
+000F64  2  5D 20 5D     .byte "| |"
+000F67  2               
+000F67  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
+000F6B  2  A0 A0 5D     
+000F6E  2  70 40 40 6E  .byte $70,$40,$40,$6e
+000F72  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
+000F76  2  5D 20 20 20  
+000F7A  2  5D           
+000F7B  2  A0 A0 A0 A0  .repeat 57
+000F7F  2  A0 A0 A0 A0  
+000F83  2  A0 A0 A0 A0  
+000FB4  2                  .byte $A0
+000FB4  2               .endrepeat
+000FB4  2  5D 20 5D     .byte "| |"
+000FB7  2               
+000FB7  2               
+000FB7  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
+000FBB  2  A0 A0 5D     
+000FBE  2  5D 3C 3E 5D  .byte "|<>|"
+000FC2  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
+000FC6  2  5D 20 20 20  
+000FCA  2  5D           
+000FCB  2  A0 A0 A0 A0  .repeat 57
+000FCF  2  A0 A0 A0 A0  
+000FD3  2  A0 A0 A0 A0  
+001004  2                  .byte $A0
+001004  2               .endrepeat
+001004  2  5D 20 5D     .byte "| |"
+001007  2               
+001007  2  20 20 5D A0  .byte "  |",$a0,$a0,$a0,"|"
+00100B  2  A0 A0 5D     
+00100E  2  6D 40 40 7D  .byte $6d,$40,$40,$7d
+001012  2  5D A0 A0 A0  .byte "|",$a0,$a0,$a0,"|   |"
+001016  2  5D 20 20 20  
+00101A  2  5D           
+00101B  2  A0 A0 A0 A0  .repeat 57
+00101F  2  A0 A0 A0 A0  
+001023  2  A0 A0 A0 A0  
+001054  2                  .byte $A0
+001054  2               .endrepeat
+001054  2  5D 20 5D     .byte "| |"
+001057  2               
+001057  2  20 20 6B 40  .byte "  ",$6b,$40,$40,$40,$73
+00105B  2  40 40 73     
+00105E  2  20 20 20 20  .repeat 4
+001062  2                  .byte " "
+001062  2               .endrepeat
+001062  2  6B 40 40 40  .byte $6b,$40,$40,$40,$73,"   |"
+001066  2  73 20 20 20  
+00106A  2  5D           
+00106B  2  A0 A0 A0 A0  .repeat 57
+00106F  2  A0 A0 A0 A0  
+001073  2  A0 A0 A0 A0  
+0010A4  2                  .byte $A0
+0010A4  2               .endrepeat
+0010A4  2  5D 20 5D     .byte "| |"
+0010A7  2               
+0010A7  2  20 20 5D 20  .byte "  |  1|"
+0010AB  2  20 31 5D     
+0010AE  2  20 20 20 20  .repeat 4
+0010B2  2                  .byte " "
+0010B2  2               .endrepeat
+0010B2  2  5D 20 20 30  .byte "|  0|   |"
+0010B6  2  5D 20 20 20  
+0010BA  2  5D           
+0010BB  2  A0 A0 A0 A0  .repeat 57
+0010BF  2  A0 A0 A0 A0  
+0010C3  2  A0 A0 A0 A0  
+0010F4  2                  .byte $A0
+0010F4  2               .endrepeat
+0010F4  2  5D 20 5D     .byte "| |"
+0010F7  2               
+0010F7  2  20 20 6D 40  .byte "  ",$6d,$40,$40,$40,$7d
+0010FB  2  40 40 7D     
+0010FE  2  20 20 20 20  .repeat 4
+001102  2                  .byte " "
+001102  2               .endrepeat
+001102  2  6D 40 40 40  .byte $6d,$40,$40,$40,$7d,"   |"
+001106  2  7D 20 20 20  
+00110A  2  5D           
+00110B  2  A0 A0 A0 A0  .repeat 57
+00110F  2  A0 A0 A0 A0  
+001113  2  A0 A0 A0 A0  
+001144  2                  .byte $A0
+001144  2               .endrepeat
+001144  2  5D 20 5D     .byte "| |"
+001147  2               
+001147  2  20 70        .byte " ",$70
+001149  2  40 40 40 40  .repeat 7
+00114D  2  40 40 40     
+001150  2                  .byte $40
+001150  2               .endrepeat
+001150  2  72           .byte $72
+001151  2  40 40 40 40  .repeat 7
+001155  2  40 40 40     
+001158  2                  .byte $40
+001158  2               .endrepeat
+001158  2  6E 20 5D     .byte $6e," |"
+00115B  2  A0 A0 A0 A0  .repeat 57
+00115F  2  A0 A0 A0 A0  
+001163  2  A0 A0 A0 A0  
+001194  2                  .byte $A0
+001194  2               .endrepeat
+001194  2  5D 20 5D     .byte "| |"
+001197  2               
+001197  2  20 5D 44 12  .byte " |Dropper| "
+00119B  2  0F 10 10 05  
+00119F  2  12 5D 20     
+0011A2  2  43 0C 05 01  .byte "Clear | |"
+0011A6  2  12 20 5D 20  
+0011AA  2  5D           
+0011AB  2  A0 A0 A0 A0  .repeat 57
+0011AF  2  A0 A0 A0 A0  
+0011B3  2  A0 A0 A0 A0  
+0011E4  2                  .byte $A0
+0011E4  2               .endrepeat
+0011E4  2  5D 20 5D     .byte "| |"
+0011E7  2               
+0011E7  2  20 6B        .byte " ",$6b
+0011E9  2  40 40 40 40  .repeat 7
+0011ED  2  40 40 40     
+0011F0  2                  .byte $40
+0011F0  2               .endrepeat
+0011F0  2  5B           .byte $5b
+0011F1  2  40 40 40 40  .repeat 7
+0011F5  2  40 40 40     
+0011F8  2                  .byte $40
+0011F8  2               .endrepeat
+0011F8  2  73 20 5D     .byte $73," |"
+0011FB  2  A0 A0 A0 A0  .repeat 57
+0011FF  2  A0 A0 A0 A0  
+001203  2  A0 A0 A0 A0  
+001234  2                  .byte $A0
+001234  2               .endrepeat
+001234  2  5D 20 5D     .byte "| |"
+001237  2               
+001237  2  20 5D 20 43  .byte " | Copy  | "
+00123B  2  0F 10 19 20  
+00123F  2  20 5D 20     
+001242  2  50 01 13 14  .byte "Paste | |"
+001246  2  05 20 5D 20  
+00124A  2  5D           
+00124B  2  A0 A0 A0 A0  .repeat 57
+00124F  2  A0 A0 A0 A0  
+001253  2  A0 A0 A0 A0  
+001284  2                  .byte $A0
+001284  2               .endrepeat
+001284  2  5D 20 5D     .byte "| |"
+001287  2               
+001287  2  20 6D        .byte " ",$6d
+001289  2  40 40 40 40  .repeat 7
+00128D  2  40 40 40     
+001290  2                  .byte $40
+001290  2               .endrepeat
+001290  2  71           .byte $71
+001291  2  40 40 40 40  .repeat 7
+001295  2  40 40 40     
+001298  2                  .byte $40
+001298  2               .endrepeat
+001298  2  7D 20 5D     .byte $7d," |"
+00129B  2  A0 A0 A0 A0  .repeat 57
+00129F  2  A0 A0 A0 A0  
+0012A3  2  A0 A0 A0 A0  
+0012D4  2                  .byte $A0
+0012D4  2               .endrepeat
+0012D4  2  5D 20 5D     .byte "| |"
+0012D7  2               
+0012D7  2  20 20 20 20  .repeat 8
+0012DB  2  20 20 20 20  
+0012DF  2                  .byte " "
+0012DF  2               .endrepeat
+0012DF  2  70 40 6E     .byte $70,$40,$6e
+0012E2  2  20 20 20 20  .repeat 8
+0012E6  2  20 20 20 20  
+0012EA  2                  .byte " "
+0012EA  2               .endrepeat
+0012EA  2  5D           .byte "|"
+0012EB  2  A0 A0 A0 A0  .repeat 57
+0012EF  2  A0 A0 A0 A0  
+0012F3  2  A0 A0 A0 A0  
+001324  2                  .byte $A0
+001324  2               .endrepeat
+001324  2  5D 20 5D     .byte "| |"
+001327  2               
+001327  2  20 20 20 20  .repeat 8
+00132B  2  20 20 20 20  
+00132F  2                  .byte " "
+00132F  2               .endrepeat
+00132F  2  5D F1 5D     .byte "|",$f1,"|"
+001332  2  20 20 20 20  .repeat 8
+001336  2  20 20 20 20  
+00133A  2                  .byte " "
+00133A  2               .endrepeat
+00133A  2  5D           .byte "|"
+00133B  2  A0 A0 A0 A0  .repeat 57
+00133F  2  A0 A0 A0 A0  
+001343  2  A0 A0 A0 A0  
+001374  2                  .byte $A0
+001374  2               .endrepeat
+001374  2  5D 20 5D     .byte "| |"
+001377  2               
+001377  2  20 20 20 20  .repeat 4
+00137B  2                  .byte " "
+00137B  2               .endrepeat
+00137B  2  70 40 72 40  .byte $70,$40,$72,$40,$71,$40,$71,$40,$72,$40,$6e
+00137F  2  71 40 71 40  
+001383  2  72 40 6E     
+001386  2  20 20 20 20  .repeat 4
+00138A  2                  .byte " "
+00138A  2               .endrepeat
+00138A  2  5D           .byte "|"
+00138B  2  A0 A0 A0 A0  .repeat 57
+00138F  2  A0 A0 A0 A0  
+001393  2  A0 A0 A0 A0  
+0013C4  2                  .byte $A0
+0013C4  2               .endrepeat
+0013C4  2  5D 20 5D     .byte "| |"
+0013C7  2               
+0013C7  2  20 20 20 20  .repeat 4
+0013CB  2                  .byte " "
+0013CB  2               .endrepeat
+0013CB  2  5D F3 5D 53  .byte "|",$f3,"|Shift|",$f0,"|"
+0013CF  2  08 09 06 14  
+0013D3  2  5D F0 5D     
+0013D6  2  20 20 20 20  .repeat 4
+0013DA  2                  .byte " "
+0013DA  2               .endrepeat
+0013DA  2  5D           .byte "|"
+0013DB  2  A0 A0 A0 A0  .repeat 57
+0013DF  2  A0 A0 A0 A0  
+0013E3  2  A0 A0 A0 A0  
+001414  2                  .byte $A0
+001414  2               .endrepeat
+001414  2  5D 20 5D     .byte "| |"
+001417  2               
+001417  2  20 20 20 20  .repeat 4
+00141B  2                  .byte " "
+00141B  2               .endrepeat
+00141B  2  6D 40 71 40  .byte $6d,$40,$71,$40,$72,$40,$72,$40,$71,$40,$7d
+00141F  2  72 40 72 40  
+001423  2  71 40 7D     
+001426  2  20 20 20 20  .repeat 4
+00142A  2                  .byte " "
+00142A  2               .endrepeat
+00142A  2  5D           .byte "|"
+00142B  2  A0 A0 A0 A0  .repeat 57
+00142F  2  A0 A0 A0 A0  
+001433  2  A0 A0 A0 A0  
+001464  2                  .byte $A0
+001464  2               .endrepeat
+001464  2  5D 20 5D     .byte "| |"
+001467  2               
+001467  2  20 20 20 20  .repeat 8
+00146B  2  20 20 20 20  
+00146F  2                  .byte " "
+00146F  2               .endrepeat
+00146F  2  5D F2 5D     .byte "|",$f2,"|"
+001472  2  20 20 20 20  .repeat 8
+001476  2  20 20 20 20  
+00147A  2                  .byte " "
+00147A  2               .endrepeat
+00147A  2  5D           .byte "|"
+00147B  2  A0 A0 A0 A0  .repeat 57
+00147F  2  A0 A0 A0 A0  
+001483  2  A0 A0 A0 A0  
+0014B4  2                  .byte $A0
+0014B4  2               .endrepeat
+0014B4  2  5D 20 5D     .byte "| |"
+0014B7  2               
+0014B7  2  20 20 20 20  .repeat 8
+0014BB  2  20 20 20 20  
+0014BF  2                  .byte " "
+0014BF  2               .endrepeat
+0014BF  2  6D 40 7D     .byte $6d,$40,$7d
+0014C2  2  20 20 20 20  .repeat 8
+0014C6  2  20 20 20 20  
+0014CA  2                  .byte " "
+0014CA  2               .endrepeat
+0014CA  2  5D           .byte "|"
+0014CB  2  A0 A0 A0 A0  .repeat 57
+0014CF  2  A0 A0 A0 A0  
+0014D3  2  A0 A0 A0 A0  
+001504  2                  .byte $A0
+001504  2               .endrepeat
+001504  2  5D 20 5D     .byte "| |"
+001507  2               
+001507  2               ; top of preview window
+001507  2  70 40 40 40  .byte $70,$40,$40,$40,$40," Preview ",$40,$40,$40,$6e," |"
+00150B  2  40 20 50 12  
+00150F  2  05 16 09 05  
+00151B  2  A0 A0 A0 A0  .repeat 57
+00151F  2  A0 A0 A0 A0  
+001523  2  A0 A0 A0 A0  
+001554  2                  .byte $A0
+001554  2               .endrepeat
+001554  2  5D 20 5D     .byte "| |"
+001557  2               
+001557  2               ; mid-windows
+001557  2  5D 20 20 20  .repeat 8
+00155B  2  20 20 20 20  
+00155F  2  20 20 20 20  
+0017D7  2                  .byte "|"
+0017D7  2                  .repeat 16
+0017D7  2                     .byte " "
+0017D7  2                  .endrepeat
+0017D7  2                  .byte "| |"
+0017D7  2                  .repeat 57
+0017D7  2                     .byte $A0
+0017D7  2                  .endrepeat
+0017D7  2                  .byte "| |"
+0017D7  2               .endrepeat
+0017D7  2               
+0017D7  2               ; bottom preview window
+0017D7  2  6D           .byte $6d
+0017D8  2  40 40 40 40  .repeat 16
+0017DC  2  40 40 40 40  
+0017E0  2  40 40 40 40  
+0017E8  2                  .byte $40
+0017E8  2               .endrepeat
+0017E8  2  7D 20 5D     .byte $7d," |"
+0017EB  2  A0 A0 A0 A0  .repeat 57
+0017EF  2  A0 A0 A0 A0  
+0017F3  2  A0 A0 A0 A0  
+001824  2                  .byte $A0
+001824  2               .endrepeat
+001824  2  5D 20 5D     .byte "| |"
+001827  2               
+001827  2  20 41 04 04  .byte " Address: $00000"
+00182B  2  12 05 13 13  
+00182F  2  3A 20 24 30  
+001837  2  20 20 20     .repeat 3
+00183A  2                  .byte " "
+00183A  2               .endrepeat
+00183A  2  5D           .byte "|"
+00183B  2  A0 A0 A0 A0  .repeat 57
+00183F  2  A0 A0 A0 A0  
+001843  2  A0 A0 A0 A0  
+001874  2                  .byte $A0
+001874  2               .endrepeat
+001874  2  5D 20 5D     .byte "| |"
+001877  2               
+001877  2  20 57 09 04  .byte " Width:  16"
+00187B  2  14 08 3A 20  
+00187F  2  20 31 36     
+001882  2  20 20 20 20  .repeat 8
+001886  2  20 20 20 20  
+00188A  2                  .byte " "
+00188A  2               .endrepeat
+00188A  2  5D           .byte "|"
+00188B  2  A0 A0 A0 A0  .repeat 57
+00188F  2  A0 A0 A0 A0  
+001893  2  A0 A0 A0 A0  
+0018C4  2                  .byte $A0
+0018C4  2               .endrepeat
+0018C4  2  5D 20 5D     .byte "| |"
+0018C7  2               
+0018C7  2  20 48 05 09  .byte " Height: 16"
+0018CB  2  07 08 14 3A  
+0018CF  2  20 31 36     
+0018D2  2  20 20 20 20  .repeat 8
+0018D6  2  20 20 20 20  
+0018DA  2                  .byte " "
+0018DA  2               .endrepeat
+0018DA  2  5D           .byte "|"
+0018DB  2  A0 A0 A0 A0  .repeat 57
+0018DF  2  A0 A0 A0 A0  
+0018E3  2  A0 A0 A0 A0  
+001914  2                  .byte $A0
+001914  2               .endrepeat
+001914  2  5D 20 5D     .byte "| |"
+001917  2               
+001917  2  20 43 0F 0C  .byte " Color Depth:  16"
+00191B  2  0F 12 20 44  
+00191F  2  05 10 14 08  
+001928  2  20 20        .repeat 2
+00192A  2                  .byte " "
+00192A  2               .endrepeat
+00192A  2  5D           .byte "|"
+00192B  2  A0 A0 A0 A0  .repeat 57
+00192F  2  A0 A0 A0 A0  
+001933  2  A0 A0 A0 A0  
+001964  2                  .byte $A0
+001964  2               .endrepeat
+001964  2  5D 20 5D     .byte "| |"
+001967  2               
+001967  2  20 48 2D 46  .byte " H-Flip: Off"
+00196B  2  0C 09 10 3A  
+00196F  2  20 4F 06 06  
+001973  2  20 20 20 20  .repeat 7
+001977  2  20 20 20     
+00197A  2                  .byte " "
+00197A  2               .endrepeat
+00197A  2  5D           .byte "|"
+00197B  2  A0 A0 A0 A0  .repeat 57
+00197F  2  A0 A0 A0 A0  
+001983  2  A0 A0 A0 A0  
+0019B4  2                  .byte $A0
+0019B4  2               .endrepeat
+0019B4  2  5D 20 5D     .byte "| |"
+0019B7  2               
+0019B7  2  20 56 2D 46  .byte " V-Flip: Off"
+0019BB  2  0C 09 10 3A  
+0019BF  2  20 4F 06 06  
+0019C3  2  20 20 20 20  .repeat 7
+0019C7  2  20 20 20     
+0019CA  2                  .byte " "
+0019CA  2               .endrepeat
+0019CA  2  5D           .byte "|"
+0019CB  2  A0 A0 A0 A0  .repeat 57
+0019CF  2  A0 A0 A0 A0  
+0019D3  2  A0 A0 A0 A0  
+001A04  2                  .byte $A0
+001A04  2               .endrepeat
+001A04  2  5D F2 5D     .byte "|",$f2,"|"
+001A07  2               
+001A07  2               ; bottom scrollbar
+001A07  2               ;   row 77 - top
+001A07  2  20 20 20 20  .repeat 19
+001A0B  2  20 20 20 20  
+001A0F  2  20 20 20 20  
+001A1A  2                  .byte " "
+001A1A  2               .endrepeat
+001A1A  2  6B           .byte $6b
+001A1B  2  40 40 40 40  .repeat 57
+001A1F  2  40 40 40 40  
+001A23  2  40 40 40 40  
+001A54  2                  .byte $40
+001A54  2               .endrepeat
+001A54  2  5B 40 73     .byte $5b,$40,$73
+001A57  2               
+001A57  2               ;  row 78 - middle
+001A57  2  20 20 20 20  .repeat 19
+001A5B  2  20 20 20 20  
+001A5F  2  20 20 20 20  
+001A6A  2                  .byte " "
+001A6A  2               .endrepeat
+001A6A  2  5D F3 5E 5E  .byte "|",$f3,$5e,$5e,$5e,$5e
+001A6E  2  5E 5E        
+001A70  2  20 20 20 20  .repeat 51
+001A74  2  20 20 20 20  
+001A78  2  20 20 20 20  
+001AA3  2                  .byte " "
+001AA3  2               .endrepeat
+001AA3  2  F0 5D 20 5D  .byte $f0,"| |"
+001AA7  2               
+001AA7  2               ; row 79 - bottom
+001AA7  2  20 20 20 20  .repeat 19
+001AAB  2  20 20 20 20  
+001AAF  2  20 20 20 20  
+001ABA  2                  .byte " "
+001ABA  2               .endrepeat
+001ABA  2  6D           .byte $6d
+001ABB  2  40 40 40 40  .repeat 57
+001ABF  2  40 40 40 40  
+001AC3  2  40 40 40 40  
+001AF4  2                  .byte $40
+001AF4  2               .endrepeat
+001AF4  2  71 40 7D     .byte $71,$40,$7d
+001AF7  2               
+001AF7  2               arrowheads:
+001AF7  2  C0           .byte %11000000
+001AF8  2  F0           .byte %11110000
+001AF9  2  FC           .byte %11111100
+001AFA  2  FF           .byte %11111111
+001AFB  2  FF           .byte %11111111
+001AFC  2  FC           .byte %11111100
+001AFD  2  F0           .byte %11110000
+001AFE  2  C0           .byte %11000000
+001AFF  2               
+001AFF  2  18           .byte %00011000
+001B00  2  18           .byte %00011000
+001B01  2  3C           .byte %00111100
+001B02  2  3C           .byte %00111100
+001B03  2  7E           .byte %01111110
+001B04  2  7E           .byte %01111110
+001B05  2  FF           .byte %11111111
+001B06  2  FF           .byte %11111111
+001B07  2               
+001B07  2  FF           .byte %11111111
+001B08  2  FF           .byte %11111111
+001B09  2  7E           .byte %01111110
+001B0A  2  7E           .byte %01111110
+001B0B  2  3C           .byte %00111100
+001B0C  2  3C           .byte %00111100
+001B0D  2  18           .byte %00011000
+001B0E  2  18           .byte %00011000
+001B0F  2               
+001B0F  2  03           .byte %00000011
+001B10  2  0F           .byte %00001111
+001B11  2  3F           .byte %00111111
+001B12  2  FF           .byte %11111111
+001B13  2  FF           .byte %11111111
+001B14  2  3F           .byte %00111111
+001B15  2  0F           .byte %00001111
+001B16  2  03           .byte %00000011
+001B17  2               
+001B17  2               TEXT_START = $1B000
+001B17  2               PAL_VIZ = TEXT_START+$503
+001B17  2               FG_COLOR_BOX = TEXT_START+$1707
+001B17  2               BG_COLOR_BOX = TEXT_START+$1719
+001B17  2               TILE_VIZ = TEXT_START+$529
+001B17  2               
+001B17  2               load_initscreen:
+001B17  2  A9 0E           lda #$0E  ; go to lowercase
+001B19  2  20 D2 FF        jsr CHROUT
+001B1C  2                  ; TODO: make sure that layer 1 is moved to default position
+001B1C  2  A9 68           lda #$68 ; 128x64 T256C
+001B1E  2  8D 34 9F        sta VERA_L1_config
+001B21  2                  ; put arrowheads into character set
+001B21  2  9C 25 9F        stz VERA_ctrl
+001B24  2  A9 11 8D 22     VERA_SET_ADDR $1F780,1
+001B28  2  9F A9 F7 8D  
+001B2C  2  21 9F A9 80  
+001B33  2  A9 F7           lda #<arrowheads
+001B35  2  85 7E           sta ZP_PTR_1
+001B37  2  A9 1A           lda #>arrowheads
+001B39  2  85 7F           sta ZP_PTR_1+1
+001B3B  2  A0 00           ldy #0
+001B3D  2               @ah_loop1:
+001B3D  2  B1 7E           lda (ZP_PTR_1),y
+001B3F  2  8D 23 9F        sta VERA_data0
+001B42  2  C8              iny
+001B43  2  C0 20           cpy #32
+001B45  2  D0 F6           bne @ah_loop1
+001B47  2  A0 00           ldy #0
+001B49  2               @ah_loop2:
 001B49  2  B1 7E           lda (ZP_PTR_1),y
-001B4B  2  8D 23 9F        sta VERA_data0
-001B4E  2  A9 01           lda #1
-001B50  2  8D 23 9F        sta VERA_data0
-001B53  2  C8              iny
-001B54  2  C0 50           cpy #80
-001B56  2  D0 F1           bne @loop
-001B58  2  A0 00           ldy #0
-001B5A  2  EE 21 9F        inc VERA_addr_high
-001B5D  2  9C 20 9F        stz VERA_addr_low
-001B60  2  A5 7E           lda ZP_PTR_1
-001B62  2  18              clc
-001B63  2  69 50           adc #80
-001B65  2  85 7E           sta ZP_PTR_1
-001B67  2  A5 7F           lda ZP_PTR_1+1
-001B69  2  69 00           adc #0
-001B6B  2  85 7F           sta ZP_PTR_1+1
-001B6D  2  CA              dex
-001B6E  2  D0 D9           bne @loop
-001B70  2                  ; load current palette
-001B70  2  A9 21 8D 22     VERA_SET_ADDR PAL_VIZ,2
-001B74  2  9F A9 B5 8D  
-001B78  2  21 9F A9 03  
-001B7F  2  A2 00           ldx #0
-001B81  2  A0 00           ldy #0
-001B83  2               @pal_loop:
-001B83  2  8E 23 9F        stx VERA_data0
-001B86  2  C8              iny
-001B87  2  C0 10           cpy #16
-001B89  2  D0 0A           bne @next_color
-001B8B  2  A0 00           ldy #0
-001B8D  2  EE 21 9F        inc VERA_addr_high
-001B90  2  A9 03           lda #<PAL_VIZ
-001B92  2  8D 20 9F        sta VERA_addr_low
-001B95  2               @next_color:
-001B95  2  E8              inx
-001B96  2  D0 EB           bne @pal_loop
-001B98  2                  ; load background color (0)
-001B98  2  A9 21 8D 22     VERA_SET_ADDR BG_COLOR_BOX,2
-001B9C  2  9F A9 C7 8D  
-001BA0  2  21 9F A9 19  
-001BA7  2  A2 03           ldx #3
-001BA9  2               @bgc_loop:
-001BA9  2  9C 23 9F        stz VERA_data0
-001BAC  2  9C 23 9F        stz VERA_data0
-001BAF  2  9C 23 9F        stz VERA_data0
-001BB2  2  EE 21 9F        inc VERA_addr_high
-001BB5  2  A9 19           lda #<BG_COLOR_BOX
-001BB7  2  8D 20 9F        sta VERA_addr_low
-001BBA  2  CA              dex
-001BBB  2  D0 EC           bne @bgc_loop
-001BBD  2  60              rts
-001BBE  2               
-001BBE  1               
-001BBE  1               TILE_MAP = $1A800
-001BBE  1               
-001BBE  1               start:
-001BBE  1  20 F0 1A        jsr load_initscreen
-001BC1  1                  ; setup layer 0 as work layer, using default settings
-001BC1  1  A9 02           lda #$02 ; 32x32 4bpp
-001BC3  1  8D 2D 9F        sta VERA_L0_config
-001BC6  1  A9 D4           lda #(TILE_MAP>>9)
-001BC8  1  8D 2E 9F        sta VERA_L0_mapbase
-001BCB  1  A9 03           lda #$03 ; tilebase $00000, 16x16 tiles
-001BCD  1  8D 2F 9F        sta VERA_L0_tilebase
-001BD0  1                  ; load tile 0
-001BD0  1               
-001BD0  1               @loop:
-001BD0  1  CB              wai
-001BD1  1  80 FD           bra @loop
-001BD3  1  60              rts
-001BD3  1               
+001B4B  2  49 FF           eor #$FF ; reverse video
+001B4D  2  8D 23 9F        sta VERA_data0
+001B50  2  C8              iny
+001B51  2  C0 20           cpy #32
+001B53  2  D0 F4           bne @ah_loop2
+001B55  2                  ; load into layer 1 tile map
+001B55  2  A9 11 8D 22     VERA_SET_ADDR TEXT_START,1
+001B59  2  9F A9 B0 8D  
+001B5D  2  21 9F A9 00  
+001B64  2  A9 37           lda #<initscreen
+001B66  2  85 7E           sta ZP_PTR_1
+001B68  2  A9 08           lda #>initscreen
+001B6A  2  85 7F           sta ZP_PTR_1+1
+001B6C  2  A0 00           ldy #0
+001B6E  2  A2 3C           ldx #60
+001B70  2               @loop:
+001B70  2  B1 7E           lda (ZP_PTR_1),y
+001B72  2  8D 23 9F        sta VERA_data0
+001B75  2  A9 01           lda #1
+001B77  2  8D 23 9F        sta VERA_data0
+001B7A  2  C8              iny
+001B7B  2  C0 50           cpy #80
+001B7D  2  D0 F1           bne @loop
+001B7F  2  A0 00           ldy #0
+001B81  2  EE 21 9F        inc VERA_addr_high
+001B84  2  9C 20 9F        stz VERA_addr_low
+001B87  2  A5 7E           lda ZP_PTR_1
+001B89  2  18              clc
+001B8A  2  69 50           adc #80
+001B8C  2  85 7E           sta ZP_PTR_1
+001B8E  2  A5 7F           lda ZP_PTR_1+1
+001B90  2  69 00           adc #0
+001B92  2  85 7F           sta ZP_PTR_1+1
+001B94  2  CA              dex
+001B95  2  D0 D9           bne @loop
+001B97  2                  ; load current palette
+001B97  2  A9 21 8D 22     VERA_SET_ADDR PAL_VIZ,2
+001B9B  2  9F A9 B5 8D  
+001B9F  2  21 9F A9 03  
+001BA6  2  A2 00           ldx #0
+001BA8  2  A0 00           ldy #0
+001BAA  2               @pal_loop:
+001BAA  2  8E 23 9F        stx VERA_data0
+001BAD  2  C8              iny
+001BAE  2  C0 10           cpy #16
+001BB0  2  D0 0A           bne @next_color
+001BB2  2  A0 00           ldy #0
+001BB4  2  EE 21 9F        inc VERA_addr_high
+001BB7  2  A9 03           lda #<PAL_VIZ
+001BB9  2  8D 20 9F        sta VERA_addr_low
+001BBC  2               @next_color:
+001BBC  2  E8              inx
+001BBD  2  D0 EB           bne @pal_loop
+001BBF  2                  ; load background color (0)
+001BBF  2  A9 21 8D 22     VERA_SET_ADDR BG_COLOR_BOX,2
+001BC3  2  9F A9 C7 8D  
+001BC7  2  21 9F A9 19  
+001BCE  2  A2 03           ldx #3
+001BD0  2               @bgc_loop:
+001BD0  2  9C 23 9F        stz VERA_data0
+001BD3  2  9C 23 9F        stz VERA_data0
+001BD6  2  9C 23 9F        stz VERA_data0
+001BD9  2  EE 21 9F        inc VERA_addr_high
+001BDC  2  A9 19           lda #<BG_COLOR_BOX
+001BDE  2  8D 20 9F        sta VERA_addr_low
+001BE1  2  CA              dex
+001BE2  2  D0 EC           bne @bgc_loop
+001BE4  2  60              rts
+001BE5  2               
+001BE5  1               
+001BE5  1               TILE_MAP = $1A800
+001BE5  1               
+001BE5  1               start:
+001BE5  1  20 17 1B        jsr load_initscreen
+001BE8  1                  ; setup layer 0 as work layer, using default settings
+001BE8  1  A9 02           lda #$02 ; 32x32 4bpp
+001BEA  1  8D 2D 9F        sta VERA_L0_config
+001BED  1  A9 D4           lda #(TILE_MAP>>9)
+001BEF  1  8D 2E 9F        sta VERA_L0_mapbase
+001BF2  1  A9 03           lda #$03 ; tilebase $00000, 16x16 tiles
+001BF4  1  8D 2F 9F        sta VERA_L0_tilebase
+001BF7  1                  ; load tile 0
+001BF7  1  20 01 1C        jsr load_tile
+001BFA  1               @loop:
+001BFA  1  CB              wai
+001BFB  1  80 FD           bra @loop
+001BFD  1  60              rts
+001BFE  1               
+001BFE  1               tile_addr:
+001BFE  1  xx xx xx        .res 3
+001C01  1               
+001C01  1               load_tile:
+001C01  1                  ; calculate tile address
+001C01  1                  ; a = width * height * bpp/8 * index
+001C01  1  AD 13 08        lda tile_index
+001C04  1  8D FE 1B        sta tile_addr
+001C07  1  AD 14 08        lda tile_index+1
+001C0A  1  8D FF 1B        sta tile_addr+1
+001C0D  1  9C 00 1C        stz tile_addr+2
+001C10  1  AD 17 08        lda bits_per_pixel
+001C13  1  85 28           sta SB1
+001C15  1  AD 11 08        lda tile_width
+001C18  1  85 29           sta SB2
+001C1A  1               @shift_width:
+001C1A  1  A9 08           lda #8
+001C1C  1  C5 28           cmp SB1
+001C1E  1  F0 06           beq @mult_width
+001C20  1  46 29           lsr SB2
+001C22  1  06 28           asl SB1
+001C24  1  80 F4           bra @shift_width
+001C26  1               @mult_width:
+001C26  1  A9 01           lda #1
+001C28  1  C5 29           cmp SB2
+001C2A  1  F0 0A           beq @mult_height
+001C2C  1  46 29           lsr SB2
+001C2E  1  0E FE 1B        asl tile_addr
+001C31  1  2E FF 1B        rol tile_addr+1
+001C34  1  80 F0           bra @mult_width
+001C36  1               @mult_height:
+001C36  1  AD 12 08        lda tile_height
+001C39  1  85 28           sta SB1
+001C3B  1               @mult_height_loop:
+001C3B  1  A9 01           lda #1
+001C3D  1  C5 28           cmp SB1
+001C3F  1  F0 0D           beq @load_tile_addr
+001C41  1  46 28           lsr SB1
+001C43  1  0E FE 1B        asl tile_addr
+001C46  1  2E FF 1B        rol tile_addr+1
+001C49  1  2E 00 1C        rol tile_addr+2
+001C4C  1  80 ED           bra @mult_height_loop
+001C4E  1               @load_tile_addr:
+001C4E  1  9C 25 9F        stz VERA_ctrl
+001C51  1  AD 00 1C        lda tile_addr+2
+001C54  1  09 10           ora #$10 ; stride = 1
+001C56  1  8D 22 9F        sta VERA_addr_bank
+001C59  1  AD FF 1B        lda tile_addr+1
+001C5C  1  8D 21 9F        sta VERA_addr_high
+001C5F  1  AD FE 1B        lda tile_addr
+001C62  1  8D 20 9F        sta VERA_addr_low
+001C65  1                  ; load tile viz address for port 1
+001C65  1  A9 01           lda #1
+001C67  1  8D 25 9F        sta VERA_ctrl
+001C6A  1  A9 21 8D 22     VERA_SET_ADDR TILE_VIZ,2
+001C6E  1  9F A9 B5 8D  
+001C72  1  21 9F A9 29  
+001C79  1  AD 11 08        lda tile_width
+001C7C  1  85 28           sta SB1
+001C7E  1  AD 12 08        lda tile_height
+001C81  1  85 29           sta SB2
+001C83  1               @render_tile:
+001C83  1  AE 23 9F        ldx VERA_data0
+001C86  1  AD 17 08        lda bits_per_pixel
+001C89  1  C9 08           cmp #8
+001C8B  1  F0 48           beq @last_pixel
+001C8D  1  C9 04           cmp #4
+001C8F  1  F0 36           beq @split_4
+001C91  1  C9 02           cmp #2
+001C93  1  F0 16           beq @split_2
+001C95  1  A0 07           ldy #7
+001C97  1               @single_bit_loop:
+001C97  1  8A              txa
+001C98  1  0A              asl
+001C99  1  AA              tax
+001C9A  1  2A              rol
+001C9B  1  29 01           and #$1
+001C9D  1  8D 24 9F        sta VERA_data1
+001CA0  1  C6 28           dec SB1
+001CA2  1  88              dey
+001CA3  1  D0 F2           bne @single_bit_loop
+001CA5  1  8A              txa
+001CA6  1  0A              asl
+001CA7  1  2A              rol
+001CA8  1  AA              tax
+001CA9  1  80 2A           bra @last_pixel
+001CAB  1               @split_2:
+001CAB  1  A0 03           ldy #3
+001CAD  1               @two_bit_loop:
+001CAD  1  8A              txa
+001CAE  1  0A              asl
+001CAF  1  2A              rol
+001CB0  1  0A              asl
+001CB1  1  2A              rol
+001CB2  1  AA              tax
+001CB3  1  29 03           and #$3
+001CB5  1  8D 24 9F        sta VERA_data1
+001CB8  1  C6 28           dec SB1
+001CBA  1  88              dey
+001CBB  1  D0 F0           bne @two_bit_loop
+001CBD  1  8A              txa
+001CBE  1  0A              asl
+001CBF  1  2A              rol
+001CC0  1  0A              asl
+001CC1  1  2A              rol
+001CC2  1  29 03           and #3
+001CC4  1  AA              tax
+001CC5  1  80 0E           bra @last_pixel
+001CC7  1               @split_4:
+001CC7  1  8A              txa
+001CC8  1  4A              lsr
+001CC9  1  4A              lsr
+001CCA  1  4A              lsr
+001CCB  1  4A              lsr
+001CCC  1  8D 24 9F        sta VERA_data1
+001CCF  1  C6 28           dec SB1
+001CD1  1  8A              txa
+001CD2  1  29 0F           and #$0F
+001CD4  1  AA              tax
+001CD5  1                  @last_pixel:
+001CD5  1  8E 24 9F        stx VERA_data1
+001CD8  1  C6 28           dec SB1
+001CDA  1  D0 A7           bne @render_tile
+001CDC  1  AD 11 08        lda tile_width
+001CDF  1  85 28           sta SB1
+001CE1  1  EE 21 9F        inc VERA_addr_high
+001CE4  1  A9 29           lda #<TILE_VIZ
+001CE6  1  8D 20 9F        sta VERA_addr_low
+001CE9  1  C6 29           dec SB2
+001CEB  1  D0 96           bne @render_tile
+001CED  1                  ; update preview sprite
+001CED  1               
+001CED  1  60              rts
+001CEE  1               
+001CEE  1               
