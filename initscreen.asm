@@ -1,647 +1,452 @@
 initscreen:
 ; menu bar
 ;  row 0 (upper border)
-.byte $70,1
+.byte $70
 .repeat 3
    .repeat 9
-      .byte $40,1
+      .byte $40
    .endrepeat
-   .byte $72,1
+   .byte $72
 .endrepeat
 .repeat 40
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $72,1
+.byte $72
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $6E,1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte $6E
+
 ;  row 1 (text)
-.byte "|",1," ",1,"F",1,"i",1,"l",1,"e",1," ",1," ",1," ",1," ",1,"|",1," ",1
-.byte "V",1,"i",1,"e",1,"w",1," ",1," ",1," ",1," ",1,"|",1," ",1
-.byte "O",1,"p",1,"t",1,"i",1,"o",1,"n",1,"s",1," ",1,"|",1
+.byte "| File    | View    | Options |"
 .repeat 13
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "X",1,"1",1,"6",1," ",1,"T",1,"i",1,"l",1,"e",1," ",1,"E",1,"d",1,"i",1,"t",1,"o",1,"r",1
+.byte "X16 Tile Editor"
 .repeat 12
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1," ",1,"A",1,"b",1,"o",1,"u",1,"t",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| About |"
+
 ;  row 2 (bottom border)
-.byte $6d,1
+.byte $6d
 .repeat 2
    .repeat 9
-      .byte $40,1
+      .byte $40
    .endrepeat
-   .byte $71,1
+   .byte $71
 .endrepeat
 .repeat 9
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $7d,1
+.byte $7d
 .repeat 40
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6d,1
+.byte $6d
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $7d,1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte $7d
+
 ; index controls
 .repeat 20
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "<",1,"<",1," ",1,"P",1,"r",1,"e",1,"v",1,"i",1,"o",1,"u",1,"s",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1
-.byte "P",1,"a",1,"l",1,"e",1,"t",1,"t",1,"e",1," ",1,"O",1,"f",1,"f",1,"s",1,"e",1,"t",1,":",1," ",1
-.byte "-",1," ",1,"0",1,"+",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1," ",1
-.byte "N",1,"e",1,"x",1,"t",1," ",1,">",1,">",1," ",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "<< Previous       Palette Offset: - 0+              Next >> "
+
 ; window upper borders
-.byte $70,1,$40,1,$40,1,$40,1,$40,1," ",1,"P",1,"a",1,"l",1,"e",1,"t",1,"t",1,"e",1," ",1,$40,1,$40,1,$40,1,$6e,1," ",1,$70,1
+.byte $70,$40,$40,$40,$40," Palette ",$40,$40,$40,$6e," ",$70
 .repeat 23
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte " ",1,"T",1,"i",1,"l",1,"e",1," ",1," ",1," ",1," ",1,"0",1," ",1
+.byte " Tile    0 "
 .repeat 23
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $72,1,$40,1,$6e,1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte $72,$40,$6e
+
 ; mid-windows
-.byte "|",1,$A0,0,$A0,1,$A0,2,$A0,3,$A0,4,$A0,5,$A0,6,$A0,7,$A0,8,$A0,9,$A0,$a,$A0,$b,$A0,$c,$A0,$d,$A0,$e,$A0,$f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1,$f1,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$10,$A0,$11,$A0,$12,$A0,$13,$A0,$14,$A0,$15,$A0,$16,$A0,$17,$A0,$18,$A0,$19,$A0,$1a,$A0,$1b,$A0,$1c,$A0,$1d,$A0,$1e,$A0,$1f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1,$5e,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$20,$A0,$21,$A0,$22,$A0,$23,$A0,$24,$A0,$25,$A0,$26,$A0,$27,$A0,$28,$A0,$29,$A0,$2a,$A0,$2b,$A0,$2c,$A0,$2d,$A0,$2e,$A0,$2f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1,$5e,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$30,$A0,$31,$A0,$32,$A0,$33,$A0,$34,$A0,$35,$A0,$36,$A0,$37,$A0,$38,$A0,$39,$A0,$3a,$A0,$3b,$A0,$3c,$A0,$3d,$A0,$3e,$A0,$3f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1,$5e,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$40,$A0,$41,$A0,$42,$A0,$43,$A0,$44,$A0,$45,$A0,$46,$A0,$47,$A0,$48,$A0,$49,$A0,$4a,$A0,$4b,$A0,$4c,$A0,$4d,$A0,$4e,$A0,$4f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1,$5e,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$50,$A0,$51,$A0,$52,$A0,$53,$A0,$54,$A0,$55,$A0,$56,$A0,$57,$A0,$58,$A0,$59,$A0,$5a,$A0,$5b,$A0,$5c,$A0,$5d,$A0,$5e,$A0,$5f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$60,$A0,$61,$A0,$62,$A0,$63,$A0,$64,$A0,$65,$A0,$66,$A0,$67,$A0,$68,$A0,$69,$A0,$6a,$A0,$6b,$A0,$6c,$A0,$6d,$A0,$6e,$A0,$6f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$70,$A0,$71,$A0,$72,$A0,$73,$A0,$74,$A0,$75,$A0,$76,$A0,$77,$A0,$78,$A0,$79,$A0,$7a,$A0,$7b,$A0,$7c,$A0,$7d,$A0,$7e,$A0,$7f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$80,$A0,$81,$A0,$82,$A0,$83,$A0,$84,$A0,$85,$A0,$86,$A0,$87,$A0,$88,$A0,$89,$A0,$8a,$A0,$8b,$A0,$8c,$A0,$8d,$A0,$8e,$A0,$8f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$90,$A0,$91,$A0,$92,$A0,$93,$A0,$94,$A0,$95,$A0,$96,$A0,$97,$A0,$98,$A0,$99,$A0,$9a,$A0,$9b,$A0,$9c,$A0,$9d,$A0,$9e,$A0,$9f,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$a0,$A0,$a1,$A0,$a2,$A0,$a3,$A0,$a4,$A0,$a5,$A0,$a6,$A0,$a7,$A0,$a8,$A0,$a9,$A0,$aa,$A0,$ab,$A0,$ac,$A0,$ad,$A0,$ae,$A0,$af,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$b0,$A0,$b1,$A0,$b2,$A0,$b3,$A0,$b4,$A0,$b5,$A0,$b6,$A0,$b7,$A0,$b8,$A0,$b9,$A0,$ba,$A0,$bb,$A0,$bc,$A0,$bd,$A0,$be,$A0,$bf,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$c0,$A0,$c1,$A0,$c2,$A0,$c3,$A0,$c4,$A0,$c5,$A0,$c6,$A0,$c7,$A0,$c8,$A0,$c9,$A0,$ca,$A0,$cb,$A0,$cc,$A0,$cd,$A0,$ce,$A0,$cf,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$d0,$A0,$d1,$A0,$d2,$A0,$d3,$A0,$d4,$A0,$d5,$A0,$d6,$A0,$d7,$A0,$d8,$A0,$d9,$A0,$da,$A0,$db,$A0,$dc,$A0,$dd,$A0,$de,$A0,$df,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$e0,$A0,$e1,$A0,$e2,$A0,$e3,$A0,$e4,$A0,$e5,$A0,$e6,$A0,$e7,$A0,$e8,$A0,$e9,$A0,$ea,$A0,$f0,$A0,$ec,$A0,$ed,$A0,$ee,$A0,$ef,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-.byte "|",1,$A0,$f0,$A0,$f1,$A0,$f2,$A0,$f3,$A0,$f4,$A0,$f5,$A0,$f6,$A0,$f7,$A0,$f8,$A0,$f9,$A0,$fa,$A0,$fb,$A0,$fc,$A0,$fd,$A0,$fe,$A0,$ff,"|",1," ",1,"|",1
-.repeat 57
-   .byte $A0,0
-.endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
-; bottom of palette window
-.byte $6d,1
+
+.byte "|"
 .repeat 16
-   .byte $40,1
+   .byte $A0
 .endrepeat
-.byte $7d,1," ",1,"|",1
+.byte "| |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
+.byte "|",$f1,"|"
+
+.repeat 4
+   .byte "|"
+   .repeat 16
+      .byte $A0
+   .endrepeat
+   .byte "| |"
+   .repeat 57
+      .byte $A0
+   .endrepeat
+   .byte "|",$5e,"|"
 .endrepeat
+
+.repeat 11
+   .byte "|"
+   .repeat 16
+      .byte $A0
+   .endrepeat
+   .byte "| |"
+   .repeat 57
+      .byte $A0
+   .endrepeat
+   .byte "| |"
+.endrepeat
+
+; bottom of palette window
+.byte $6d
+.repeat 16
+   .byte $40
+.endrepeat
+.byte $7d," |"
+.repeat 57
+   .byte $A0
+.endrepeat
+.byte "| |"
+
 ; between palette and preview windows
-.byte " ",1," ",1,$70,1,$40,1,$40,1,$40,1,$6e,1
+.byte "  ",$70,$40,$40,$40,$6e
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $70,1,$40,1,$40,1,$40,1,$6e,1," ",1," ",1," ",1,"|",1
+.byte $70,$40,$40,$40,$6e,"   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,"|",1,$a0,1,$a0,1,$a0,1,"|",1
-.byte $70,1,$40,1,$40,1,$6e,1
-.byte "|",1,$a0,0,$a0,0,$a0,0,"|",1," ",1," ",1," ",1,"|",1
+.byte "  |",$a0,$a0,$a0,"|"
+.byte $70,$40,$40,$6e
+.byte "|",$a0,$a0,$a0,"|   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,"|",1,$a0,1,$a0,1,$a0,1,"|",1
-.byte "|",1,"<",1,">",1,"|",1
-.byte "|",1,$a0,0,$a0,0,$a0,0,"|",1," ",1," ",1," ",1,"|",1
+
+.byte "  |",$a0,$a0,$a0,"|"
+.byte "|<>|"
+.byte "|",$a0,$a0,$a0,"|   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,"|",1,$a0,1,$a0,1,$a0,1,"|",1
-.byte $6d,1,$40,1,$40,1,$7d,1
-.byte "|",1,$a0,0,$a0,0,$a0,0,"|",1," ",1," ",1," ",1,"|",1
+.byte "  |",$a0,$a0,$a0,"|"
+.byte $6d,$40,$40,$7d
+.byte "|",$a0,$a0,$a0,"|   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,$6b,1,$40,1,$40,1,$40,1,$73,1
+.byte "  ",$6b,$40,$40,$40,$73
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6b,1,$40,1,$40,1,$40,1,$73,1," ",1," ",1," ",1,"|",1
+.byte $6b,$40,$40,$40,$73,"   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,"|",1," ",1," ",1,"1",1,"|",1
+.byte "  |  1|"
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1," ",1," ",1,"0",1,"|",1," ",1," ",1," ",1,"|",1
+.byte "|  0|   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1," ",1,$6d,1,$40,1,$40,1,$40,1,$7d,1
+.byte "  ",$6d,$40,$40,$40,$7d
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6d,1,$40,1,$40,1,$40,1,$7d,1," ",1," ",1," ",1,"|",1
+.byte $6d,$40,$40,$40,$7d,"   |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,$70,1
+.byte " ",$70
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $72,1
+.byte $72
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $6e,1," ",1,"|",1
+.byte $6e," |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"|",1,"D",1,"r",1,"o",1,"p",1,"p",1,"e",1,"r",1,"|",1," ",1
-.byte "C",1,"l",1,"e",1,"a",1,"r",1," ",1,"|",1," ",1,"|",1
+.byte " |Dropper| "
+.byte "Clear | |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,$6b,1
+.byte " ",$6b
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $5b,1
+.byte $5b
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $73,1," ",1,"|",1
+.byte $73," |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"|",1," ",1,"C",1,"o",1,"p",1,"y",1," ",1," ",1,"|",1," ",1
-.byte "P",1,"a",1,"s",1,"t",1,"e",1," ",1,"|",1," ",1,"|",1
+.byte " | Copy  | "
+.byte "Paste | |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,$6d,1
+.byte " ",$6d
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $71,1
+.byte $71
 .repeat 7
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $7d,1," ",1,"|",1
+.byte $7d," |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $70,1,$40,1,$6e,1
+.byte $70,$40,$6e
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1,$f1,1,"|",1
+.byte "|",$f1,"|"
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $70,1,$40,1,$72,1,$40,1,$71,1,$40,1,$71,1,$40,1,$72,1,$40,1,$6e,1
+.byte $70,$40,$72,$40,$71,$40,$71,$40,$72,$40,$6e
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1,$f3,1,"|",1,"S",1,"h",1,"i",1,"f",1,"t",1,"|",1,$f0,1,"|",1
+.byte "|",$f3,"|Shift|",$f0,"|"
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6d,1,$40,1,$71,1,$40,1,$72,1,$40,1,$72,1,$40,1,$71,1,$40,1,$7d,1
+.byte $6d,$40,$71,$40,$72,$40,$72,$40,$71,$40,$7d
 .repeat 4
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1,$f2,1,"|",1
+.byte "|",$f2,"|"
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6d,1,$40,1,$7d,1
+.byte $6d,$40,$7d
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
 ; top of preview window
-.byte $70,1,$40,1,$40,1,$40,1,$40,1," ",1,"P",1,"r",1,"e",1,"v",1,"i",1,"e",1,"w",1," ",1,$40,1,$40,1,$40,1,$6e,1," ",1,"|",1
+.byte $70,$40,$40,$40,$40," Preview ",$40,$40,$40,$6e," |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
+
 ; mid-windows
 .repeat 8
-   .byte "|",1
+   .byte "|"
    .repeat 16
-      .byte $A0,0
+      .byte " "
    .endrepeat
-   .byte "|",1," ",1,"|",1
+   .byte "| |"
    .repeat 57
-      .byte $A0,0
+      .byte $A0
    .endrepeat
-   .byte "|",1," ",1,"|",1
-   .repeat 96
-      .byte 0 ; offscreen
-   .endrepeat
+   .byte "| |"
 .endrepeat
+
 ; bottom preview window
-.byte $6d,1
+.byte $6d
 .repeat 16
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $7d,1," ",1,"|",1
+.byte $7d," |"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"A",1,"d",1,"d",1,"r",1,"e",1,"s",1,"s",1,":",1," ",1,"$",1,"0",1,"0",1,"0",1,"0",1,"0",1
+.byte " Address: $00000"
 .repeat 3
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"W",1,"i",1,"d",1,"t",1,"h",1,":",1," ",1," ",1,"1",1,"6",1
+.byte " Width:  16"
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"H",1,"e",1,"i",1,"g",1,"h",1,"t",1,":",1," ",1,"1",1,"6",1
+.byte " Height: 16"
 .repeat 8
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"C",1,"o",1,"l",1,"o",1,"r",1," ",1,"D",1,"e",1,"p",1,"t",1,"h",1,":",1," ",1," ",1,"1",1,"6",1
+.byte " Color Depth:  16"
 .repeat 2
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"H",1,"-",1,"F",1,"l",1,"i",1,"p",1,":",1," ",1,"O",1,"f",1,"f",1
+.byte " H-Flip: Off"
 .repeat 7
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "| |"
 
-.byte " ",1,"V",1,"-",1,"F",1,"l",1,"i",1,"p",1,":",1," ",1,"O",1,"f",1,"f",1
+.byte " V-Flip: Off"
 .repeat 7
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1
+.byte "|"
 .repeat 57
-   .byte $A0,0
+   .byte $A0
 .endrepeat
-.byte "|",1,$f2,1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte "|",$f2,"|"
+
 ; bottom scrollbar
 ;   row 77 - top
 .repeat 19
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6b,1
+.byte $6b
 .repeat 57
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $5b,1,$40,1,$73,1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte $5b,$40,$73
+
 ;  row 78 - middle
 .repeat 19
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte "|",1,$f3,1,$5e,1,$5e,1,$5e,1,$5e,1
+.byte "|",$f3,$5e,$5e,$5e,$5e
 .repeat 51
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $f0,1,"|",1," ",1,"|",1
-.repeat 96
-   .byte 0 ; offscreen
-.endrepeat
+.byte $f0,"| |"
+
 ; row 79 - bottom
 .repeat 19
-   .byte " ",1
+   .byte " "
 .endrepeat
-.byte $6d,1
+.byte $6d
 .repeat 57
-   .byte $40,1
+   .byte $40
 .endrepeat
-.byte $71,1,$40,1,$7d,1
-end_initscreen:
+.byte $71,$40,$7d
 
 arrowheads:
 .byte %11000000
@@ -680,6 +485,10 @@ arrowheads:
 .byte %00001111
 .byte %00000011
 
+TEXT_START = $1B000
+PAL_VIZ = TEXT_START+$503
+FG_COLOR_BOX = TEXT_START+$1707
+BG_COLOR_BOX = TEXT_START+$1719
 
 load_initscreen:
    lda #$0E  ; go to lowercase
@@ -689,12 +498,7 @@ load_initscreen:
    sta VERA_L1_config
    ; put arrowheads into character set
    stz VERA_ctrl
-   lda #$11 ; stride = 1, address = $1F780
-   sta VERA_addr_bank
-   lda #$F7
-   sta VERA_addr_high
-   lda #$80
-   sta VERA_addr_low
+   VERA_SET_ADDR $1F780,1
    lda #<arrowheads
    sta ZP_PTR_1
    lda #>arrowheads
@@ -715,25 +519,59 @@ load_initscreen:
    cpy #32
    bne @ah_loop2
    ; load into layer 1 tile map
-   lda #$11 ; stride = 1, address = $1B000
-   sta VERA_addr_bank
-   lda #$B0
-   sta VERA_addr_high
-   stz VERA_addr_low
+   VERA_SET_ADDR TEXT_START,1
    lda #<initscreen
    sta ZP_PTR_1
    lda #>initscreen
    sta ZP_PTR_1+1
    ldy #0
+   ldx #60
 @loop:
    lda (ZP_PTR_1),y
    sta VERA_data0
+   lda #1
+   sta VERA_data0
    iny
+   cpy #80
    bne @loop
+   ldy #0
+   inc VERA_addr_high
+   stz VERA_addr_low
+   lda ZP_PTR_1
+   clc
+   adc #80
+   sta ZP_PTR_1
    lda ZP_PTR_1+1
-   cmp #>end_initscreen
-   beq @return
-   inc ZP_PTR_1+1
-   bra @loop
-@return:
+   adc #0
+   sta ZP_PTR_1+1
+   dex
+   bne @loop
+   ; load current palette
+   VERA_SET_ADDR PAL_VIZ,2
+   ldx #0
+   ldy #0
+@pal_loop:
+   stx VERA_data0
+   iny
+   cpy #16
+   bne @next_color
+   ldy #0
+   inc VERA_addr_high
+   lda #<PAL_VIZ
+   sta VERA_addr_low
+@next_color:
+   inx
+   bne @pal_loop
+   ; load background color (0)
+   VERA_SET_ADDR BG_COLOR_BOX,2
+   ldx #3
+@bgc_loop:
+   stz VERA_data0
+   stz VERA_data0
+   stz VERA_data0
+   inc VERA_addr_high
+   lda #<BG_COLOR_BOX
+   sta VERA_addr_low
+   dex
+   bne @bgc_loop
    rts
