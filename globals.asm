@@ -24,6 +24,12 @@ bits_per_pixel:
 palette_offset:
 .byte 0
 
+tile_viz_width:
+.byte 57
+
+tile_viz_height:
+.byte 52
+
 ; scratch bytes
 SB1 = $28
 SB2 = $29
@@ -40,4 +46,4 @@ init_globals:
    lda #4
    sta bits_per_pixel
    stz palette_offset
-   
+
