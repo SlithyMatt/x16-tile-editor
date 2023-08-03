@@ -53,7 +53,10 @@ initscreen:
 .repeat 20
    .byte " "
 .endrepeat
-.byte "<< Previous       Palette Offset: - 0+              Next >> "
+init_prev_string:
+.byte "<< Previous       Palette Offset: - 0+              "
+init_next_string:
+.byte "Next >> "
 
 ; window upper borders
 .byte $70,$40,$40,$40,$40," Palette ",$40,$40,$40,$6e," ",$70

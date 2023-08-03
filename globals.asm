@@ -33,17 +33,23 @@ tile_viz_height:
 ; scratch bytes
 SB1 = $28
 SB2 = $29
+SB3 = $2A
+SB4 = $2B
+
+MOUSE_X = $2C
+MOUSE_Y = $2E
 
 init_globals:
    stz sprite_mode
    lda #16
    sta tile_height
    sta tile_width
-   stz tile_index
    lda #1
    sta fg_color
+   stz tile_index
    stz bg_color
    lda #4
    sta bits_per_pixel
    stz palette_offset
+   rts
 
