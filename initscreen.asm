@@ -63,8 +63,8 @@ init_next_string:
 .repeat 22
    .byte $40
 .endrepeat
-.byte " Tile     0 "
-.repeat 23
+.byte " Tile    0 "
+.repeat 24
    .byte $40
 .endrepeat
 .byte $72,$40,$6e

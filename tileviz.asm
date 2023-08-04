@@ -10,7 +10,10 @@ PREV_TILE_X = 20
 offset_down_tile_x: .byte PREV_TILE_X+34
 offset_up_tile_x: .byte PREV_TILE_X+37
 next_tile_x: .byte PREV_TILE_X+52
-tile_num_x: .byte 48
+tile_num_x: .byte 47
+
+TILE_ADDR_X = 11
+TILE_ADDR_Y = 51
 
 prev_latch: .byte 0
 next_latch: .byte 0
@@ -176,7 +179,14 @@ load_tile:
    ldy #4
    jsr print_word_dec
    ; update preview sprite
-
+   lda #<tile_addr
+   sta ZP_PTR_1
+   lda #>tile_addr
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #TILE_ADDR_X
+   ldy #TILE_ADDR_Y
+   jsr print_vaddr
    rts
 
 tileviz_clear_latches:

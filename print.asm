@@ -78,7 +78,6 @@ print_word_dec:
    sta VERA_data0
    rts
 
-
 print_load_addrs:
    sta IND_VEC
    stz IND_VEC+1
@@ -102,3 +101,40 @@ print_load_addrs:
    lda SB2
    sta IND_VEC+1
    rts
+
+print_vaddr:
+   jsr print_load_addrs
+   ldy #2
+   lda (IND_VEC),y
+   jsr print_hex_digit
+   dey
+   lda (IND_VEC),y
+   jsr print_hex_byte
+   lda (IND_VEC)
+   jsr print_hex_byte
+   rts
+
+print_hex_digit:
+   cmp #$A
+   bpl @letter
+   ora #$30
+   bra @print
+@letter:
+   clc
+   adc #$37
+@print:
+   sta VERA_data0
+   rts
+
+print_hex_byte:
+   pha
+   lsr
+   lsr
+   lsr
+   lsr
+   jsr print_hex_digit
+   pla
+   and #$0F
+   jsr print_hex_digit
+   rts
+   
