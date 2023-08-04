@@ -14,6 +14,7 @@
 .include "mouse.asm"
 .include "palette.asm"
 .include "tools.asm"
+.include "print.asm"
 
 TILE_MAP = $1A800
 

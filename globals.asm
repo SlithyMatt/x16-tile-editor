@@ -39,6 +39,8 @@ SB4 = $2B
 MOUSE_X = $2C
 MOUSE_Y = $2E
 
+IND_VEC = $30
+
 init_globals:
    stz sprite_mode
    lda #16

@@ -10,6 +10,7 @@ PREV_TILE_X = 20
 offset_down_tile_x: .byte PREV_TILE_X+34
 offset_up_tile_x: .byte PREV_TILE_X+37
 next_tile_x: .byte PREV_TILE_X+52
+tile_num_x: .byte 48
 
 prev_latch: .byte 0
 next_latch: .byte 0
@@ -165,6 +166,15 @@ load_tile:
    bne @blackout_full_width
    dex
    bne @blackout_height
+   ; update display text
+   lda #<tile_index
+   sta ZP_PTR_1
+   lda #>tile_index
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx tile_num_x
+   ldy #4
+   jsr print_word_dec
    ; update preview sprite
 
    rts
