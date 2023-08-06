@@ -1,24 +1,14 @@
-tile_addr: .res 3
-
-pal_offset_up: .byte 57
-
-pal_offset_down: .byte 54
-
-next_tile: .byte 72
-
-PREV_TILE_X = 20
-offset_down_tile_x: .byte PREV_TILE_X+34
-offset_up_tile_x: .byte PREV_TILE_X+37
-next_tile_x: .byte PREV_TILE_X+52
-tile_num_x: .byte 47
-
-TILE_ADDR_X = 11
-TILE_ADDR_Y = 51
-
-prev_latch: .byte 0
-next_latch: .byte 0
-offset_up_latch: .byte 0
-offset_down_latch: .byte 0
+init_tileviz:
+   lda #(PREV_TILE_X+34)
+   sta offset_down_tile_x
+   lda #(PREV_TILE_X+37)
+   sta offset_up_tile_x
+   lda #(PREV_TILE_X+52) 
+   sta next_tile_x
+   lda #47
+   sta tile_num_x
+   jsr tileviz_clear_latches
+   rts
 
 load_tile:
    ; calculate tile address

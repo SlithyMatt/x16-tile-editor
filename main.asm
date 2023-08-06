@@ -1,14 +1,13 @@
-.org $080D
-.segment "STARTUP"
-.segment "INIT"
-.segment "ONCE"
-.segment "CODE"
+.org $1000
+.bss
+.include "bss.asm"
 
+.org $2000 ; TODO: Change to $C000 for ROM
+.code
    jmp start
 
 .include "x16.inc"
 .include "charmap.inc"
-.include "globals.asm"
 .include "initscreen.asm"
 .include "tileviz.asm"
 .include "mouse.asm"
@@ -22,6 +21,7 @@ start:
    jsr init_globals
    jsr init_mouse
    jsr load_initscreen
+   jsr init_tileviz
    ; setup layer 0 as work layer, using default settings
    lda #$02 ; 32x32 4bpp
    sta VERA_L0_config
@@ -51,6 +51,25 @@ start:
    bra @loop
    rts
 
+init_globals:
+   stz sprite_mode
+   lda #16
+   sta tile_height
+   sta tile_width
+   lda #1
+   sta fg_color
+   stz tile_index
+   stz tile_index+1
+   stz bg_color
+   lda #4
+   sta bits_per_pixel
+   stz palette_offset
+   lda #57
+   sta tile_viz_width
+   lda #52
+   sta tile_viz_height
+   rts
+
 left_click:
    ; TODO: check menu bar
    cpy #3
@@ -74,3 +93,5 @@ left_click:
 
 right_click:
    rts
+
+

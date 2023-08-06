@@ -1,5 +1,3 @@
-print_bcd: .res 5
-
 print_word_dec:
    jsr print_load_addrs
    lda (IND_VEC)
@@ -137,4 +135,3 @@ print_hex_byte:
    and #$0F
    jsr print_hex_digit
    rts
-   

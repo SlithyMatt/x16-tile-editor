@@ -16,6 +16,7 @@ get_mouse_xy:
    ror MOUSE_X
    lsr MOUSE_X+1
    ror MOUSE_X
+
    ldx MOUSE_X ; x = character X coordinate
    ; divide by 8
    lsr MOUSE_Y+1
