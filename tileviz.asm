@@ -1,3 +1,7 @@
+PREVIEW_SPRITE_ATTR = $1FC08
+PREVIEW_SPRITE_X = 64
+PREVIEW_SPRITE_Y = 360
+
 init_tileviz:
    lda #(PREV_TILE_X+34)
    sta offset_down_tile_x
@@ -8,6 +12,27 @@ init_tileviz:
    lda #47
    sta tile_num_x
    jsr tileviz_clear_latches
+   stz VERA_ctrl
+   lda #($10 | ^PREVIEW_SPRITE_ATTR)
+   sta VERA_addr_bank
+   lda #>PREVIEW_SPRITE_ATTR
+   sta VERA_addr_high
+   lda #<PREVIEW_SPRITE_ATTR
+   sta VERA_addr_low
+   stz VERA_data0
+   stz VERA_data0
+   lda #<PREVIEW_SPRITE_X
+   sta VERA_data0
+   lda #>PREVIEW_SPRITE_X
+   sta VERA_data0
+   lda #<PREVIEW_SPRITE_Y
+   sta VERA_data0
+   lda #>PREVIEW_SPRITE_Y
+   sta VERA_data0
+   lda #$0C ; Z = 3, no flips
+   sta VERA_data0
+   lda #$50 ; 16x16, PO = 0
+   sta VERA_data0
    rts
 
 load_tile:
@@ -159,7 +184,7 @@ load_tile:
    bne @blackout_full_width
    dex
    bne @blackout_height
-   ; update display text
+   ; update display text for tile index
    lda #<tile_index
    sta ZP_PTR_1
    lda #>tile_index
@@ -168,7 +193,7 @@ load_tile:
    ldx tile_num_x
    ldy #4
    jsr print_word_dec
-   ; update preview sprite
+   ; update display text for tile address
    lda #<tile_addr
    sta ZP_PTR_1
    lda #>tile_addr
@@ -177,6 +202,35 @@ load_tile:
    ldx #TILE_ADDR_X
    ldy #TILE_ADDR_Y
    jsr print_vaddr
+   ; update preview sprite
+   stz VERA_ctrl
+   lda #($10 | ^PREVIEW_SPRITE_ATTR)
+   sta VERA_addr_bank
+   lda #>PREVIEW_SPRITE_ATTR
+   sta VERA_addr_high
+   lda #<PREVIEW_SPRITE_ATTR
+   sta VERA_addr_low
+   lda tile_addr+2
+   sta SB2
+   lda tile_addr+1
+   sta SB1
+   lda tile_addr
+   lsr SB2
+   ror SB1
+   ror
+   ldx #4
+@shift_tile_addr:
+   lsr SB1
+   ror
+   dex
+   bne @shift_tile_addr
+   sta VERA_data0
+   lda SB1
+   ; TODO set mode bit if 8bpp
+   sta VERA_data0
+   ; TODO set X/Y
+   lda VERA_data0 ; preserve Z and flips
+   ; TODO set height/width/PO
    rts
 
 tileviz_clear_latches:
