@@ -1,6 +1,8 @@
 PREVIEW_SPRITE_ATTR = $1FC08
 PREVIEW_SPRITE_X = 64
 PREVIEW_SPRITE_Y = 360
+TILE_VIZ_X = 20
+TILE_VIZ_Y = 5
 
 init_tileviz:
    lda #(PREV_TILE_X+34)
@@ -234,6 +236,7 @@ load_tile:
    rts
 
 tileviz_clear_latches:
+   phx
    stz prev_latch
    stz next_latch
    stz offset_down_latch
@@ -252,6 +255,7 @@ tileviz_clear_latches:
    inx
    cpx #59
    bne @loop
+   plx
    rts
 
 tile_navigate:
@@ -264,7 +268,7 @@ tile_navigate:
    lda tile_index
    beq @return
    jsr do_prev
-   bra @return
+   rts
 @check_down:
    cpx offset_down_tile_x
    bne @check_up
@@ -273,7 +277,7 @@ tile_navigate:
    lda palette_offset
    beq @return
    jsr do_offset_down
-   bra @return
+   rts
 @check_up:
    cpx offset_up_tile_x
    bne @check_next
@@ -283,7 +287,7 @@ tile_navigate:
    cmp #15
    beq @return
    jsr do_offset_up
-   bra @return
+   rts
 @check_next:
    cpx next_tile_x
    bmi @return
@@ -296,7 +300,7 @@ tile_navigate:
    lda next_latch
    bne @return
    ; TODO check for last tile
-   jsr do_next
+   jmp do_next ; tail-optimization
 @return:
    rts
 
@@ -318,8 +322,7 @@ do_prev:
    inx
    cpx #11
    bne @loop
-   jsr load_tile
-   rts
+   jmp load_tile ; tail-optimization
 
 do_next:
    inc next_latch
@@ -340,24 +343,197 @@ do_next:
    inx
    cpx #7
    bne @loop
-   jsr load_tile
-   rts
+   jmp load_tile ; tail-optimization   rts
 
 do_offset_down:
    inc offset_down_latch
    dec palette_offset
 
 
-   jsr load_tile
-   rts
+   jmp load_tile ; tail-optimization
 
 do_offset_up:
    inc offset_up_latch
    inc palette_offset
 
 
-   jsr load_tile
+   jmp load_tile ; tail-optimization
+
+check_tileviz_xy:
+   ; TODO handle scroll position/large sprites
+   lda #TILE_VIZ_X
+   clc
+   adc tile_width
+   sta SB1
+   cpx SB1
+   bpl @return
+   lda #TILE_VIZ_Y
+   clc
+   adc tile_height
+   sta SB1
+   cpy SB1
+@return:
    rts
 
+tileviz_xy_to_vram:
+   stz VERA_ctrl
+   ; TODO handle scroll position
+   txa
+   sec
+   sbc #TILE_VIZ_X
+   sta SB1
+   tya
+   sec
+   sbc #TILE_VIZ_Y
+   sta SB2
+   lda tile_width
+   sta SB3
+   lda bits_per_pixel
+   cmp #1
+   beq @get1bpp
+   cmp #2
+   beq @get2bpp
+   cmp #4
+   beq @get4bpp
+   bra @get8bpp
+@get1bpp:
+   lsr SB1
+   lsr SB3
+@get2bpp:
+   lsr SB1
+   lsr SB3
+@get4bpp:
+   lsr SB1
+   lsr SB3
+@get8bpp:
+   ; address = tile_addr + SB1 + SB2*SB3
+   stz SB4
+   lsr SB3
+@mult_loop:
+   lda SB3
+   cmp #0
+   beq @add_x
+   lsr SB3
+   asl SB2
+   rol SB4
+   bra @mult_loop
+@add_x:
+   lda SB1
+   clc
+   adc SB2
+   sta SB1
+   lda SB4
+   adc #0
+   sta SB2 ; SB1/2 = VRAM offset
+   lda SB1
+   clc
+   adc tile_addr
+   sta VERA_addr_low
+   lda SB2
+   adc tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr+2
+   adc #0
+   sta VERA_addr_bank 
+   rts
+
+tileviz_set_pixel: ; A = 8-bit color index
+   sta SB1
+   lda bits_per_pixel
+   cmp #1
+   beq @set1bpp
+   cmp #2
+   beq @set2bpp
+   cmp #4
+   beq @set4bpp
+   lda SB1
+   sta VERA_data0 ; 8bpp, just store the whole index
+   bra @done
+@set1bpp:
+   lda SB1
+   and #$01
+   sta SB1
+   txa
+   and #$07
+   sta SB2
+   lda #7
+   sec
+   sbc SB2
+   bne @startloop1bpp
+   lda #1
+   bra @insert
+@startloop1bpp:
+   tax
+   lda #1
+@loop1bpp:
+   asl SB1
+   asl
+   dex
+   bne @loop1bpp
+   bra @insert
+@set2bpp:
+   lda SB1
+   and #$03
+   sta SB1
+   txa
+   and #$03
+   sta SB2
+   lda #3
+   sec
+   sbc SB2
+   bne @startloop2bpp
+   lda #3
+   bra @insert
+@startloop2bpp:
+   tax
+   lda #3
+@loop2bpp:
+   asl SB1
+   asl SB1
+   asl
+   asl
+   dex
+   bne @loop2bpp
+   bra @insert
+@set4bpp:
+   lda SB1
+   and #$0F
+   sta SB1
+   txa
+   and #$01
+   bne @lower4bpp
+   asl SB1
+   asl SB1
+   asl SB1
+   asl SB1
+   lda #$F0
+   bra @insert
+@lower4bpp:
+   lda #$0F
+@insert:
+   eor #$FF
+   sta SB2 ; bitmask
+   lda VERA_data0
+   and SB2
+   ora SB1
+   sta VERA_data0
+@done:
+   jmp load_tile ; tail-optimization
+
 tileviz_leftclick:
+   jsr check_tileviz_xy
+   bpl @return
+   jsr tileviz_xy_to_vram
+   lda fg_color
+   jmp tileviz_set_pixel ; tail-optimization
+@return:
+   rts
+
+tileviz_rightclick:
+   jsr check_tileviz_xy
+   bpl @return
+   jsr tileviz_xy_to_vram
+   lda bg_color
+   jmp tileviz_set_pixel ; tail-optimization
+@return:
    rts

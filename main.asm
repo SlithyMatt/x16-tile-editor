@@ -77,9 +77,9 @@ left_click:
    jsr tile_navigate
    bra @return
 @check_tile_viz:
-   cpy #5
+   cpy #TILE_VIZ_Y
    bmi @return
-   cpx #20
+   cpx #TILE_VIZ_X
    bmi @check_palette
    jsr tileviz_leftclick
 @check_palette:
@@ -92,6 +92,16 @@ left_click:
    rts
 
 right_click:
+   cpy #TILE_VIZ_Y
+   bmi @return
+   cpx #TILE_VIZ_X
+   bmi @check_palette
+   jsr tileviz_rightclick
+@check_palette:
+   cpy #21
+   bpl @return
+   jsr palette_rightclick
+@return:
    rts
 
 
