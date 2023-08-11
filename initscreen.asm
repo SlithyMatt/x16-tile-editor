@@ -566,16 +566,6 @@ load_initscreen:
 @next_color:
    inx
    bne @pal_loop
-   ; load background color (0)
-   VERA_SET_ADDR BG_COLOR_BOX,2
-   ldx #3
-@bgc_loop:
-   stz VERA_data0
-   stz VERA_data0
-   stz VERA_data0
-   inc VERA_addr_high
-   lda #<BG_COLOR_BOX
-   sta VERA_addr_low
-   dex
-   bne @bgc_loop
+   ; update palette selections
+   jsr palette_sel_update
    rts

@@ -85,6 +85,8 @@ left_click:
 @check_palette:
    cpy #21
    bpl @check_tools
+   cpx #1
+   bmi @return
    jsr palette_leftclick
 @check_tools:
    jsr tools_click
