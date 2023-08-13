@@ -186,6 +186,52 @@ load_tile:
    bne @blackout_full_width
    dex
    bne @blackout_height
+   ; draw box around tile
+   stz VERA_ctrl
+   lda #$91
+   sta VERA_addr_bank
+   lda #($B0 + TILE_VIZ_Y)
+   sta VERA_addr_high
+   lda #TILE_VIZ_X
+   clc
+   adc tile_width
+   asl
+   sta VERA_addr_low
+   pha
+   lda #1
+   sta VERA_ctrl
+   lda #$91
+   sta VERA_addr_bank
+   lda #($B0 + TILE_VIZ_Y)
+   sta VERA_addr_high
+   pla
+   inc
+   sta VERA_addr_low
+   ldx tile_height
+@right_border_loop:
+   lda #$74
+   sta VERA_data0
+   lda #1
+   sta VERA_data1
+   dex
+   bne @right_border_loop
+   stz VERA_ctrl
+   lda #$11
+   sta VERA_addr_bank
+   lda #($B0 + TILE_VIZ_Y)
+   clc
+   adc tile_height
+   sta VERA_addr_high
+   lda #(TILE_VIZ_X*2)
+   sta VERA_addr_low
+   ldx tile_width
+@bottom_border_loop:
+   lda #$77
+   sta VERA_data0
+   lda #1
+   sta VERA_data0
+   dex
+   bne @bottom_border_loop
    ; update display text for tile index
    lda #<tile_index
    sta ZP_PTR_1
