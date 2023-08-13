@@ -22,6 +22,7 @@ start:
    jsr init_mouse
    jsr load_initscreen
    jsr init_tileviz
+   jsr init_tools
    ; setup layer 0 as work layer, using default settings
    lda #$02 ; 32x32 4bpp
    sta VERA_L0_config
@@ -40,6 +41,7 @@ start:
    bra @check_right_button
 @clear_latches:
    jsr tileviz_clear_latches
+   jsr tools_clear_latches
 @check_right_button:
    pla ; restore button state
    bit #2
@@ -82,12 +84,14 @@ left_click:
    cpx #TILE_VIZ_X
    bmi @check_palette
    jsr tileviz_leftclick
+   bra @return
 @check_palette:
    cpy #21
    bpl @check_tools
    cpx #1
    bmi @return
    jsr palette_leftclick
+   bra @return
 @check_tools:
    jsr tools_click
 @return:

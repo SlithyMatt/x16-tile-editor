@@ -1,4 +1,5 @@
-print_word_dec:
+print_word_dec: ; A = ZP address of word
+                ; X,Y = coordinates to print
    jsr print_load_addrs
    lda (IND_VEC)
    sta SB1
@@ -76,9 +77,55 @@ print_word_dec:
    sta VERA_data0
    rts
 
-print_load_addrs:
-   sta IND_VEC
-   stz IND_VEC+1
+print_byte_dec: ; A = byte to print in decimal
+                ; X,Y = coordinates
+   sta SB1   
+   jsr print_set_vera_addr
+   stz print_bcd
+   stz print_bcd+1
+   sed
+   ldx #8
+@loop:
+   ; shift highest bit to C
+   asl SB1
+   ; BCD = BCD*2 + C
+   lda print_bcd
+   adc print_bcd
+   sta print_bcd
+   lda print_bcd+1
+   adc print_bcd+1
+   sta print_bcd+1
+   dex
+   bne @loop
+   cld
+   lda print_bcd+1
+   beq @print_space1
+   ora #$30
+   bra @print1
+@print_space1:
+   lda #$20
+@print1:
+   sta VERA_data0
+   lda print_bcd
+   lsr
+   lsr
+   lsr
+   lsr
+   cmp #0
+   beq @print_space2
+   ora #$30
+   bra @print2
+@print_space2:
+   lda #$20
+@print2:
+   sta VERA_data0
+   lda print_bcd
+   and #$0F
+   ora #$30
+   sta VERA_data0
+   rts
+
+print_set_vera_addr: ; X,Y = coordinates to print
    stz VERA_ctrl
    lda #$21
    sta VERA_addr_bank
@@ -89,6 +136,13 @@ print_load_addrs:
    txa
    asl
    sta VERA_addr_low
+   rts
+
+print_load_addrs: ; Input: A = ZP address of pointer to value; X,Y = coordinates to print
+                  ; Output: IND_VEC = de-referenced pointer
+   sta IND_VEC
+   stz IND_VEC+1
+   jsr print_set_vera_addr
    lda (IND_VEC)
    sta SB1
    ldy #1
@@ -100,7 +154,8 @@ print_load_addrs:
    sta IND_VEC+1
    rts
 
-print_vaddr:
+print_vaddr: ; A = ZP address of pointer to 3-byte VRAM address
+             ; X,Y = coordinates to print
    jsr print_load_addrs
    ldy #2
    lda (IND_VEC),y
@@ -112,7 +167,7 @@ print_vaddr:
    jsr print_hex_byte
    rts
 
-print_hex_digit:
+print_hex_digit:  ; A = hex digit (in lower nybble -- upper nybble should be clear)
    cmp #$A
    bpl @letter
    ora #$30
@@ -124,7 +179,7 @@ print_hex_digit:
    sta VERA_data0
    rts
 
-print_hex_byte:
+print_hex_byte: ; A = byte value to print in hex
    pha
    lsr
    lsr
@@ -134,4 +189,17 @@ print_hex_byte:
    pla
    and #$0F
    jsr print_hex_digit
+   rts
+
+print_string: ; A = ZP address of pointer to null-terminated string (max length = 255)
+               ; X,Y = coordinates to print
+   jsr print_load_addrs
+   ldy #0
+@loop:
+   lda (IND_VEC),y
+   beq @return
+   sta VERA_data0
+   iny
+   bra @loop
+@return:
    rts

@@ -41,6 +41,8 @@ MOUSE_Y = $2E
 
 IND_VEC = $30
 
+PRINT_STRING_PTR = $32
+
 ; PRINT VARIABLES
 
 print_bcd: .res 5
@@ -63,5 +65,7 @@ next_latch: .res 1
 offset_up_latch: .res 1
 offset_down_latch: .res 1
 
+
+color_switch_latch: .res 1
 
 

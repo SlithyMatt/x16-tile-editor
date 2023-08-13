@@ -51,4 +51,14 @@ palette_sel_update:
    sta VERA_addr_low
    dex
    bne @bgc_loop
+   ; update foreground index label
+   lda fg_color
+   ldx #3
+   ldy #27
+   jsr print_byte_dec
+   ; update background index label
+   lda bg_color
+   ldx #12
+   ldy #27
+   jsr print_byte_dec
    rts
