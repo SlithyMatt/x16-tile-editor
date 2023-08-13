@@ -190,7 +190,7 @@ load_tile:
    stz VERA_ctrl
    lda #$91
    sta VERA_addr_bank
-   lda #($B0 + TILE_VIZ_Y)
+   lda #($B0 + TILE_VIZ_Y - 1)
    sta VERA_addr_high
    lda #TILE_VIZ_X
    clc
@@ -198,6 +198,8 @@ load_tile:
    asl
    sta VERA_addr_low
    pha
+   lda #$72
+   sta VERA_data0
    lda #1
    sta VERA_ctrl
    lda #$91
@@ -209,7 +211,7 @@ load_tile:
    sta VERA_addr_low
    ldx tile_height
 @right_border_loop:
-   lda #$74
+   lda #$5D
    sta VERA_data0
    lda #1
    sta VERA_data1
@@ -222,16 +224,23 @@ load_tile:
    clc
    adc tile_height
    sta VERA_addr_high
-   lda #(TILE_VIZ_X*2)
+   lda #(TILE_VIZ_X*2 - 2)
    sta VERA_addr_low
+   lda #$6B
+   sta VERA_data0
+   lda VERA_data0 ; skip over this color
    ldx tile_width
 @bottom_border_loop:
-   lda #$77
+   lda #$40
    sta VERA_data0
    lda #1
    sta VERA_data0
    dex
    bne @bottom_border_loop
+   lda #$7D
+   sta VERA_data0
+   lda #1
+   sta VERA_data0
    ; update display text for tile index
    lda #<tile_index
    sta ZP_PTR_1
