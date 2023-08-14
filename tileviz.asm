@@ -124,9 +124,8 @@ load_tile:
    txa
    asl
    rol
-   asl
-   rol
    tax
+   rol
    and #$3
    sta VERA_data1
    dec SB1
@@ -135,7 +134,6 @@ load_tile:
    txa
    asl
    rol
-   asl
    rol
    and #3
    tax
@@ -151,7 +149,7 @@ load_tile:
    txa
    and #$0F
    tax
-   @last_pixel:
+@last_pixel:
    stx VERA_data1
    dec SB1
    bne @render_tile
@@ -267,6 +265,9 @@ load_tile:
    sta VERA_addr_high
    lda #<PREVIEW_SPRITE_ATTR
    sta VERA_addr_low
+   lda bits_per_pixel
+   cmp #4
+   bmi @scale_to_4bpp
    lda tile_addr+2
    sta SB2
    lda tile_addr+1
@@ -282,9 +283,18 @@ load_tile:
    dex
    bne @shift_tile_addr
    sta VERA_data0
-   lda SB1
-   ; TODO set mode bit if 8bpp
+   lda bits_per_pixel
+   and #$08
+   asl
+   asl
+   asl
+   asl
+   ora SB1   
    sta VERA_data0
+   bra @setxy
+@scale_to_4bpp:
+   jsr scale_sprite_to_4bpp
+@setxy:
    ; TODO set X/Y
    lda VERA_data0
    lda VERA_data0
@@ -317,6 +327,160 @@ load_tile:
    ora SB1
    sta VERA_data0
    rts
+
+SCALED_4BPP_SPRITE_VRAM = $1EC00
+
+scale_sprite_to_4bpp:
+   lda #<(SCALED_4BPP_SPRITE_VRAM >> 5)
+   sta VERA_data0
+   lda #>(SCALED_4BPP_SPRITE_VRAM >> 5)
+   sta VERA_data0
+   lda #1
+   sta VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   lda bits_per_pixel
+   cmp #1
+   beq @load1bpp
+   jmp @load2bpp
+@load1bpp:
+   lda tile_width
+   lsr
+   lsr
+   lsr
+   tax
+   lda tile_height
+   clc
+@calc_loop1:
+   dex
+   beq @start_load1
+   adc tile_height
+   bra @calc_loop1
+@start_load1:
+   sta SB1
+   ldx #0
+@load_loop1:
+   lda VERA_data1
+   sta scratch_tile,x
+   inx
+   cpx SB1
+   bne @load_loop1
+   VERA_SET_ADDR SCALED_4BPP_SPRITE_VRAM,1
+   ldx #0
+@scale_loop1:
+   lda scratch_tile,x
+   sta SB2
+   and #$80
+   lsr
+   lsr
+   lsr
+   sta SB3
+   lda SB2
+   and #$40
+   lsr
+   lsr
+   lsr
+   lsr
+   lsr
+   lsr
+   ora SB3
+   sta VERA_data1
+   lda SB2
+   and #$20
+   lsr
+   sta SB3
+   lda SB2
+   and #$10
+   lsr
+   lsr
+   lsr
+   lsr
+   ora SB3
+   sta VERA_data1
+   lda SB2
+   and #$08
+   asl
+   sta SB3
+   lda SB2
+   and #$04
+   lsr
+   lsr
+   ora SB3
+   sta VERA_data1
+   lda SB2
+   and #$02
+   asl
+   asl
+   asl
+   sta SB3
+   lda SB2
+   and #$01
+   ora SB3
+   sta VERA_data1
+   inx
+   cpx SB1
+   bne @scale_loop1
+   rts
+@load2bpp:
+   lda tile_width
+   lsr
+   lsr
+   tax
+   lda tile_height
+   clc
+@calc_loop2:
+   dex
+   beq @start_load2
+   adc tile_height
+   bra @calc_loop2
+@start_load2:
+   sta SB1
+   ldx #0
+@load_loop2:
+   lda VERA_data1
+   sta scratch_tile,x
+   inx
+   cpx SB1
+   bne @load_loop2
+   VERA_SET_ADDR SCALED_4BPP_SPRITE_VRAM,1
+   ldx #0
+@scale_loop2:
+   lda scratch_tile,x
+   sta SB2
+   and #$C0
+   lsr
+   lsr
+   sta SB3
+   lda SB2
+   and #$30
+   lsr
+   lsr
+   lsr
+   lsr
+   ora SB3
+   sta VERA_data1
+   lda SB2
+   and #$0C
+   asl
+   asl
+   sta SB3
+   lda SB2
+   and #$03
+   ora SB3
+   sta VERA_data1
+   inx
+   cpx SB1
+   bne @scale_loop2
+   rts
+
+
+
+
 
 tileviz_clear_latches:
    phx
@@ -426,7 +590,7 @@ do_next:
    inx
    cpx #7
    bne @loop
-   jmp load_tile ; tail-optimization   rts
+   jmp load_tile ; tail-optimization
 
 do_offset_down:
    inc offset_down_latch

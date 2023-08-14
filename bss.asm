@@ -69,5 +69,8 @@ offset_down_latch: .res 1
 color_switch_latch: .res 1
 tile_width_latch: .res 1
 tile_height_latch: .res 1
+color_depth_latch: .res 1
+
+scratch_tile: .res 1024
 
 

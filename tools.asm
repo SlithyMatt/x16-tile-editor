@@ -15,6 +15,9 @@ TILE_WIDTH_Y = 52
 TILE_HEIGHT_X = 9
 TILE_HEIGHT_Y = 53
 
+COLOR_DEPTH_X = 14
+COLOR_DEPTH_Y = 54
+
 TOOL_STRINGS_REVERSED = $0400
 
 .macro PRINT_REVERSED_TOOL_STRING string_addr, chx, chy
@@ -67,6 +70,7 @@ tools_clear_latches:
    stz color_switch_latch
    stz tile_height_latch
    stz tile_width_latch
+   stz color_depth_latch
    ldy #0
    lda #<tool_string_table
    sta ZP_PTR_1
@@ -121,6 +125,14 @@ tools_click:
    bpl @return
    jmp next_height ; tail-optimization
 @check_color_depth:
+   cpy #COLOR_DEPTH_Y
+   bne @check_hflip
+   cpx #COLOR_DEPTH_X
+   bmi @return
+   cpx #(COLOR_DEPTH_X+3)
+   bpl @return
+   jmp next_color_depth
+@check_hflip:
 
 @return:
    rts
@@ -235,6 +247,52 @@ next_height:
    ldy #TILE_HEIGHT_Y
    jmp print_byte_dec ; tail-optimization
 
+
+string256: .asciiz "256"
+
+next_color_depth:
+   lda color_depth_latch
+   beq @engage
+   rts
+@engage:
+   inc color_depth_latch
+   lda bits_per_pixel
+   asl
+   cmp #16
+   bne @set_depth
+   lda #1
+@set_depth:
+   sta bits_per_pixel
+   cmp #1
+   bne @check2
+   lda #2
+   bra @print_depth
+@check2:
+   cmp #2
+   bne @check4
+   lda #4
+   bra @print_depth
+@check4:
+   cmp #4
+   bne @print256
+   lda #16
+@print_depth:
+   ldx #COLOR_DEPTH_X
+   ldy #COLOR_DEPTH_Y
+   jsr print_byte_dec
+   bra @update
+@print256:
+   lda #<string256
+   sta ZP_PTR_1
+   lda #>string256
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #COLOR_DEPTH_X
+   ldy #COLOR_DEPTH_Y
+   jsr print_string
+@update:
+   jmp load_tile ; tail-optimization
+   
 
 switch_colors:
    lda color_switch_latch
