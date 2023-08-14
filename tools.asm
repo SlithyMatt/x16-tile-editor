@@ -5,7 +5,15 @@ COLOR_SWITCH_Y = 24
 color_switch_string:
    .asciiz "<>"
 
+
+
 end_tool_strings:
+
+TILE_WIDTH_X = 9
+TILE_WIDTH_Y = 52
+
+TILE_HEIGHT_X = 9
+TILE_HEIGHT_Y = 53
 
 TOOL_STRINGS_REVERSED = $0400
 
@@ -57,6 +65,8 @@ tools_clear_latches:
    phx
    phy
    stz color_switch_latch
+   stz tile_height_latch
+   stz tile_width_latch
    ldy #0
    lda #<tool_string_table
    sta ZP_PTR_1
@@ -95,10 +105,136 @@ tools_click:
    bpl @return
    jsr switch_colors
 @check_buttons:
+   cpy #TILE_WIDTH_Y
+   bne @check_tile_height
+   cpx #TILE_WIDTH_X
+   bmi @return
+   cpx #(TILE_WIDTH_X+2)
+   bpl @return
+   jmp next_width ; tail-optimization
+@check_tile_height:
+   cpy #TILE_HEIGHT_Y
+   bne @check_color_depth
+   cpx #TILE_HEIGHT_X
+   bmi @return
+   cpx #(TILE_HEIGHT_X+2)
+   bpl @return
+   jmp next_height ; tail-optimization
+@check_color_depth:
 
 @return:
    rts
    
+
+next_width:
+   lda tile_width_latch
+   beq @engage
+   rts
+@engage:
+   inc tile_width_latch
+   lda tile_width
+   asl
+   cmp #64 ; TODO - support 64
+   bne @set_width
+   lda #8
+@set_width:
+   sta tile_width
+   cmp #32
+   bpl @update
+   lsr
+   lsr
+   lsr
+   lsr
+   sta SB1
+   lda VERA_L0_tilebase
+   and #$FE
+   ora SB1
+   sta VERA_L0_tilebase
+@update:
+; reset previous right border
+   stz VERA_ctrl
+   lda #$91
+   sta VERA_addr_bank
+   lda #($B0 + TILE_VIZ_Y - 1)
+   sta VERA_addr_high
+   lda tile_width
+   cmp #8
+   beq @reset32 ; TODO: change to 64
+   clc
+   adc #(TILE_VIZ_X*2)
+   bra @reset
+@reset32: ; TODO: change to 64
+   lda #(TILE_VIZ_X*2 + 64)
+@reset:
+   sta VERA_addr_low
+   lda #$40
+   sta VERA_data0
+   lda #$A0
+   ldx #32 ; TODO change to height of visible tileviz
+@loop:
+   sta VERA_data0
+   dex
+   bne @loop
+   jsr load_tile
+   lda tile_width
+   ldx #(TILE_WIDTH_X-1)
+   ldy #TILE_WIDTH_Y
+   jmp print_byte_dec ; tail-optimization
+
+next_height:
+   lda tile_height_latch
+   beq @engage
+   rts
+@engage:
+   inc tile_height_latch
+   lda tile_height
+   asl
+   cmp #64 ; TODO - support 64
+   bne @set_height
+   lda #8
+@set_height:
+   sta tile_height
+   cmp #32
+   bpl @update
+   lsr
+   lsr
+   lsr
+   and #$02
+   sta SB1
+   lda VERA_L0_tilebase
+   and #$FD
+   ora SB1
+   sta VERA_L0_tilebase
+@update:
+; reset previous bottom border
+   stz VERA_ctrl
+   ldx #(TILE_VIZ_X-1)
+   lda tile_height
+   lsr
+   cmp #4
+   beq @reset32 ; TODO change to 64
+   clc
+   adc #TILE_VIZ_Y
+   bra @reset
+@reset32:
+   lda #(TILE_VIZ_Y+32)
+@reset:
+   tay
+   jsr print_set_vera_addr
+   lda #$5D
+   sta VERA_data0
+   lda #$A0
+   ldx #32 ; TODO change to width of visible tileviz
+@loop:
+   sta VERA_data0
+   dex
+   bne @loop
+   jsr load_tile
+   lda tile_height
+   ldx #(TILE_HEIGHT_X-1)
+   ldy #TILE_HEIGHT_Y
+   jmp print_byte_dec ; tail-optimization
+
 
 switch_colors:
    lda color_switch_latch
@@ -111,6 +247,6 @@ switch_colors:
    sta bg_color
    pla
    sta fg_color
-   jsr palette_sel_update
+   jmp palette_sel_update ; tail-optimization
 @return:
    rts

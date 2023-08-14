@@ -164,8 +164,7 @@ print_vaddr: ; A = ZP address of pointer to 3-byte VRAM address
    lda (IND_VEC),y
    jsr print_hex_byte
    lda (IND_VEC)
-   jsr print_hex_byte
-   rts
+   jmp print_hex_byte ; tail-optimization
 
 print_hex_digit:  ; A = hex digit (in lower nybble -- upper nybble should be clear)
    cmp #$A
@@ -188,8 +187,7 @@ print_hex_byte: ; A = byte value to print in hex
    jsr print_hex_digit
    pla
    and #$0F
-   jsr print_hex_digit
-   rts
+   jmp print_hex_digit ; tail-optimization
 
 print_string: ; A = ZP address of pointer to null-terminated string (max length = 255)
                ; X,Y = coordinates to print
@@ -203,3 +201,12 @@ print_string: ; A = ZP address of pointer to null-terminated string (max length 
    bra @loop
 @return:
    rts
+
+print_char: ; A = screen code to print
+            ; X,Y = coordinates
+   pha  
+   jsr print_set_vera_addr
+   pla
+   sta VERA_data0
+   rts
+   

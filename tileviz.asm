@@ -11,7 +11,7 @@ init_tileviz:
    sta offset_up_tile_x
    lda #(PREV_TILE_X+52) 
    sta next_tile_x
-   lda #47
+   lda #46
    sta tile_num_x
    jsr tileviz_clear_latches
    stz VERA_ctrl
@@ -286,8 +286,36 @@ load_tile:
    ; TODO set mode bit if 8bpp
    sta VERA_data0
    ; TODO set X/Y
+   lda VERA_data0
+   lda VERA_data0
+   lda VERA_data0
+   lda VERA_data0
    lda VERA_data0 ; preserve Z and flips
-   ; TODO set height/width/PO
+   ; set height/width/PO
+   lda tile_height
+   cmp #64
+   beq @height64
+   asl
+   asl
+   and #$C0
+   bra @set_height
+@height64:
+   lda #$C0
+@set_height:
+   sta SB1
+   lda tile_width
+   cmp #64
+   beq @width64
+   and #$30
+   bra @set_width
+@width64:
+   lda #$30
+@set_width:
+   ora SB1
+   sta SB1
+   lda palette_offset
+   ora SB1
+   sta VERA_data0
    rts
 
 tileviz_clear_latches:

@@ -60,11 +60,11 @@ init_next_string:
 
 ; window upper borders
 .byte $70,$40,$40,$40,$40," Palette ",$40,$40,$40,$6e," ",$70
-.repeat 22
+.repeat 21
    .byte $40
 .endrepeat
 .byte " Tile    0 "
-.repeat 24
+.repeat 25
    .byte $40
 .endrepeat
 .byte $72,$40,$6e

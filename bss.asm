@@ -67,5 +67,7 @@ offset_down_latch: .res 1
 
 
 color_switch_latch: .res 1
+tile_width_latch: .res 1
+tile_height_latch: .res 1
 
 
