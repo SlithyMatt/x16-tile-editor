@@ -153,9 +153,11 @@ load_tile:
    stx VERA_data1
    dec SB1
    bne @render_tile
+   lda VERA_data1 ; skip over line
    lda tile_viz_width
    sec
    sbc tile_width
+   dec
 @blackout_width:
    stz VERA_data1
    dec
