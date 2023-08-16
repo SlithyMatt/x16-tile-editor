@@ -1,34 +1,17 @@
 ; GLOBAL VARIABLES
 
-sprite_mode:
-.res 1  ; 0 = tiles, 1 = tile-sized sprites, 2 = big sprites
+sprite_mode: .res 1  ; 0 = tiles, 1 = tile-sized sprites, 2 = big sprites
 
-tile_width:
-.res 2
-
-tile_height:
-.res 2
-
-tile_index:
-.res 2
-
-fg_color:
-.res 1
-
-bg_color:
-.res 1
-
-bits_per_pixel:
-.res 1
-
-palette_offset:
-.res 1
-
-tile_viz_width:
-.res 1
-
-tile_viz_height:
-.res 1
+tile_width: .res 2
+tile_height: .res 2
+tile_index: .res 2
+tile_count: .res 2
+fg_color: .res 1
+bg_color: .res 1
+bits_per_pixel: .res 1
+palette_offset: .res 1
+tile_viz_width: .res 1
+tile_viz_height: .res 1
 
 ; scratch bytes
 SB1 = $28
@@ -46,6 +29,7 @@ PRINT_STRING_PTR = $32
 ; PRINT VARIABLES
 
 print_bcd: .res 5
+print_space: .res 1
 
 ; TILEVIZ VARIABLES
 
@@ -72,5 +56,9 @@ tile_height_latch: .res 1
 color_depth_latch: .res 1
 
 scratch_tile: .res 1024
+
+tile_filename: .res 256
+pal_filename: .res 256
+
 
 

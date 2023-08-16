@@ -30,9 +30,12 @@ print_word_dec: ; A = ZP address of word
    dex
    bne @main_loop
    cld
+   lda #1
+   sta print_space
    lda print_bcd+2
    beq @print_space1
    ora #$30
+   stz print_space
    bra @print1
 @print_space1:
    lda #$20
@@ -44,18 +47,26 @@ print_word_dec: ; A = ZP address of word
    lsr
    lsr
    beq @print_space2
+   stz print_space
+@num2:
    ora #$30
    bra @print2
 @print_space2:
+   lda print_space
+   beq @num2
    lda #$20
 @print2:
    sta VERA_data0
    lda print_bcd+1
    and #$0F
    beq @print_space3
+   stz print_space
+@num3:
    ora #$30
    bra @print3
 @print_space3:
+   lda print_space
+   beq @num3
    lda #$20
 @print3:
    sta VERA_data0
@@ -65,9 +76,13 @@ print_word_dec: ; A = ZP address of word
    lsr
    lsr
    beq @print_space4
+   stz print_space
+@num4:
    ora #$30
    bra @print4
 @print_space4:
+   lda print_space
+   beq @num4
    lda #$20
 @print4:
    sta VERA_data0

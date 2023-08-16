@@ -14,8 +14,10 @@
 .include "palette.asm"
 .include "tools.asm"
 .include "print.asm"
+.include "files.asm"
 
 TILE_MAP = $1A800
+MAX_16x16x16_TILES = 848
 
 start:
    jsr init_globals
@@ -29,7 +31,10 @@ start:
    lda #(TILE_MAP>>9)
    sta VERA_L0_mapbase
    lda #$03 ; tilebase $00000, 16x16 tiles
-   sta VERA_L0_tilebase   
+   sta VERA_L0_tilebase
+   ; attempt to load default files
+   jsr init_filenames
+   jsr load_tile_file
    ; load tile 0
    jsr load_tile
 @loop:
@@ -49,7 +54,13 @@ start:
    jsr right_click
 @sleepytime:
    wai
-   ; TODO check keyboard buffer
+   ; check keyboard buffer
+   jsr GETIN
+   cmp #0
+   beq @loop
+   cmp #$53 ; S key
+   bne @loop ; TODO - check more keys via table
+   jsr save_tile_file
    bra @loop
    rts
 
@@ -70,6 +81,10 @@ init_globals:
    sta tile_viz_width
    lda #52
    sta tile_viz_height
+   lda #<MAX_16x16x16_TILES
+   sta tile_count
+   lda #>MAX_16x16x16_TILES
+   sta tile_count+1
    rts
 
 left_click:
