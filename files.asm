@@ -1,7 +1,11 @@
 default_tile_filename: .asciiz "TILES.BIN"
 default_pal_filename: .asciiz "PAL.BIN"
 
+LOGICAL_FILE = 2
+EMPTY_FILENAME = $FF
+
 init_filenames:
+   stz file_error
    ldx #0
 @loop1:
    lda default_tile_filename,x
@@ -18,9 +22,10 @@ init_filenames:
    rts
 
 set_tile_filename:
-   lda #1
+   stz file_error
+   lda #LOGICAL_FILE
    ldx #8
-   ldy #0
+   ldy #0 ; TODO set SA to 2 for headerless
    jsr SETLFS
    ldx #0
 @measure_loop:
@@ -33,26 +38,41 @@ set_tile_filename:
    txa
    ldx #<tile_filename
    ldy #>tile_filename
-   jmp SETNAM ; tail-optimization
+   jsr SETNAM
+   jsr READST
+   beq @return
+   sta file_error
+   bra @return
 @empty_filename:
-   ; TODO - define error condition
+   lda #EMPTY_FILENAME
+   sta file_error
+@return:
    rts
 
 load_tile_file:
    jsr set_tile_filename
+   lda file_error
+   bne @return
    lda #2
    ldx #0
    ldy #0
-   jmp LOAD ; tail-optimization
-@empty_filename:
-   ; TODO - print error
+   jsr LOAD
+   jsr READST
+   beq @return
+   sta file_error
+   jsr CLRCHN   
+@return:
    rts
 
 save_tile_file:
    jsr set_tile_filename
    jsr OPEN
-   ldx #1
+   ldx #LOGICAL_FILE
    jsr CHKOUT
+   jsr READST
+   beq @start_write
+   jmp @error
+@start_write:
    stz VERA_ctrl
    VERA_SET_ADDR $00000,1
    ; TODO - omit header if not desired
@@ -117,10 +137,47 @@ save_tile_file:
    lda SB3
    beq @done
 @next:
+   jsr READST
+   bne @error
    lda VERA_data0
    jsr CHROUT
    bra @save_loop
+@error:
+   sta file_error
 @done:
    jsr CLOSE
    jmp CLRCHN ; tail-optimization
+
+
+file_error_label: .asciiz "File Error:"
+file_error_blank: .asciiz "              "
+
+FILE_ERROR_LABEL_X = 1
+FILE_ERROR_X = FILE_ERROR_LABEL_X + 12
+FILE_ERROR_Y = 59 ; TODO - define variable for bottom row
+
+print_file_error:
+   lda file_error
+   beq @blank
+   lda #<file_error_label
+   sta ZP_PTR_1
+   lda #>file_error_label
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #FILE_ERROR_LABEL_X
+   ldy #FILE_ERROR_Y
+   jsr print_string
+   lda file_error
+   ldx #FILE_ERROR_X
+   ldy #FILE_ERROR_Y
+   jmp print_byte_hex ; tail-optimization
+@blank:
+   lda #<file_error_blank
+   sta ZP_PTR_1
+   lda #>file_error_blank
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #FILE_ERROR_LABEL_X
+   ldy #FILE_ERROR_Y
+   jmp print_string ; tail-optimization
 

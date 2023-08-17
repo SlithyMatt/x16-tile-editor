@@ -60,5 +60,6 @@ scratch_tile: .res 1024
 tile_filename: .res 256
 pal_filename: .res 256
 
+file_error: .res 1
 
 

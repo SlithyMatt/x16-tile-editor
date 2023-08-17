@@ -38,6 +38,7 @@ start:
    ; load tile 0
    jsr load_tile
 @loop:
+   jsr print_file_error
    jsr get_mouse_xy
    bit #1 ; process left button click first
    pha ; store button state on stack
