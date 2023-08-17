@@ -17,7 +17,7 @@
 .include "files.asm"
 
 TILE_MAP = $1A800
-MAX_16x16x16_TILES = 848
+MAX_16x16x16_TILES = 512
 
 start:
    jsr init_globals

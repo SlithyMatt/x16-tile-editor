@@ -26,6 +26,8 @@ IND_VEC = $30
 
 PRINT_STRING_PTR = $32
 
+FILENAME_PTR = $34
+
 ; PRINT VARIABLES
 
 print_bcd: .res 5
@@ -57,9 +59,13 @@ color_depth_latch: .res 1
 
 scratch_tile: .res 1024
 
+tile_filename_prefix: .res 2
 tile_filename: .res 256
+
+pal_filename_prefix: .res 2
 pal_filename: .res 256
 
 file_error: .res 1
+file_sa: .res 1
 
 

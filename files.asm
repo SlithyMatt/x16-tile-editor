@@ -6,6 +6,12 @@ EMPTY_FILENAME = $FF
 
 init_filenames:
    stz file_error
+   lda #$40 ; "@"
+   sta tile_filename_prefix
+   sta pal_filename_prefix
+   lda #$3A ; ":"
+   sta tile_filename_prefix+1
+   sta pal_filename_prefix+1
    ldx #0
 @loop1:
    lda default_tile_filename,x
@@ -21,27 +27,24 @@ init_filenames:
    bne @loop2
    rts
 
-set_tile_filename:
+set_filename: ; FILENAME_PTR = address of null-terminated filename
    stz file_error
    lda #LOGICAL_FILE
-   ldx #8
-   ldy #0 ; TODO set SA to 2 for headerless
+   ldx #SD_DEVICE
+   ldy file_sa
    jsr SETLFS
-   ldx #0
+   ldy #0
 @measure_loop:
-   lda tile_filename,x
-   inx
+   lda (FILENAME_PTR),y
+   iny
    cmp #0
    bne @measure_loop
-   dex
+   dey
    beq @empty_filename
-   txa
-   ldx #<tile_filename
-   ldy #>tile_filename
+   tya
+   ldx FILENAME_PTR
+   ldy FILENAME_PTR+1
    jsr SETNAM
-   jsr READST
-   beq @return
-   sta file_error
    bra @return
 @empty_filename:
    lda #EMPTY_FILENAME
@@ -50,7 +53,12 @@ set_tile_filename:
    rts
 
 load_tile_file:
-   jsr set_tile_filename
+   stz file_sa
+   lda #<tile_filename
+   sta FILENAME_PTR
+   lda #>tile_filename
+   sta FILENAME_PTR+1
+   jsr set_filename
    lda file_error
    bne @return
    lda #2
@@ -58,14 +66,19 @@ load_tile_file:
    ldy #0
    jsr LOAD
    jsr READST
-   beq @return
+   and #$BF ; clear EOF bit
    sta file_error
-   jsr CLRCHN   
 @return:
    rts
 
 save_tile_file:
-   jsr set_tile_filename
+   lda #1
+   sta file_sa
+   lda #<tile_filename_prefix
+   sta FILENAME_PTR
+   lda #>tile_filename_prefix
+   sta FILENAME_PTR+1
+   jsr set_filename
    jsr OPEN
    ldx #LOGICAL_FILE
    jsr CHKOUT
@@ -146,6 +159,8 @@ save_tile_file:
    sta file_error
 @done:
    jsr CLOSE
+   jsr READST
+   sta file_error
    jmp CLRCHN ; tail-optimization
 
 
