@@ -80,8 +80,15 @@ save_tile_file:
    sta FILENAME_PTR+1
    jsr set_filename
    jsr OPEN
+   jsr READST
+   beq @do_chkout
+   jmp @error
+@do_chkout:
    ldx #LOGICAL_FILE
    jsr CHKOUT
+   bcc @continue_check_chkout
+   jmp @error
+@continue_check_chkout:
    jsr READST
    beq @start_write
    jmp @error
@@ -158,6 +165,7 @@ save_tile_file:
 @error:
    sta file_error
 @done:
+   lda #LOGICAL_FILE
    jsr CLOSE
    jsr READST
    sta file_error
