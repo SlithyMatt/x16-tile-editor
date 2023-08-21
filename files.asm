@@ -19,6 +19,7 @@ init_filenames:
    inx
    cmp #0
    bne @loop1
+   ldx #0
 @loop2:
    lda default_pal_filename,x
    sta pal_filename,x
@@ -64,6 +65,25 @@ load_tile_file:
    lda #2
    ldx #0
    ldy #0
+   jsr LOAD
+   jsr READST
+   and #$BF ; clear EOF bit
+   sta file_error
+@return:
+   rts
+
+load_pal_file:
+   stz file_sa
+   lda #<pal_filename
+   sta FILENAME_PTR
+   lda #>pal_filename
+   sta FILENAME_PTR+1
+   jsr set_filename
+   lda file_error
+   bne @return
+   lda #(2 + ^VRAM_palette)
+   ldx #<VRAM_palette
+   ldy #>VRAM_palette
    jsr LOAD
    jsr READST
    and #$BF ; clear EOF bit
@@ -162,6 +182,57 @@ save_tile_file:
    lda VERA_data0
    jsr CHROUT
    bra @save_loop
+@error:
+   sta file_error
+@done:
+   lda #LOGICAL_FILE
+   jsr CLOSE
+   jsr READST
+   sta file_error
+   jmp CLRCHN ; tail-optimization
+
+
+save_pal_file:
+   lda #1
+   sta file_sa
+   lda #<pal_filename_prefix
+   sta FILENAME_PTR
+   lda #>pal_filename_prefix
+   sta FILENAME_PTR+1
+   jsr set_filename
+   jsr OPEN
+   jsr READST
+   beq @do_chkout
+   jmp @error
+@do_chkout:
+   ldx #LOGICAL_FILE
+   jsr CHKOUT
+   bcc @continue_check_chkout
+   jmp @error
+@continue_check_chkout:
+   jsr READST
+   beq @start_write
+   jmp @error
+@start_write:
+   stz VERA_ctrl
+   VERA_SET_ADDR VRAM_palette,1
+   ; TODO - omit header if not desired
+   lda #0
+   jsr CHROUT
+   jsr CHROUT
+   ldx #0
+   ldy #1
+@write_loop: ; write 512 bytes
+   jsr READST
+   bne @error
+   lda VERA_data0
+   jsr CHROUT
+   dex
+   bne @write_loop
+   dey
+   beq @write_loop
+   jsr READST
+   beq @done
 @error:
    sta file_error
 @done:

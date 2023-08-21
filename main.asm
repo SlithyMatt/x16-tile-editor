@@ -17,7 +17,7 @@
 .include "files.asm"
 
 TILE_MAP = $1A800
-MAX_16x16x16_TILES = 512
+MAX_16x16x16_TILES = 848
 
 start:
    jsr init_globals
@@ -35,6 +35,7 @@ start:
    ; attempt to load default files
    jsr init_filenames
    jsr load_tile_file
+   jsr init_palette
    ; load tile 0
    jsr load_tile
 @loop:
@@ -62,6 +63,7 @@ start:
    cmp #$53 ; S key
    bne @loop ; TODO - check more keys via table
    jsr save_tile_file
+   jsr save_pal_file
    bra @loop
    rts
 

@@ -1,3 +1,5 @@
+.include "default_pal.asm"
+
 palette_leftclick:
    jsr palette_getindex
    sta fg_color
@@ -61,4 +63,27 @@ palette_sel_update:
    ldx #12
    ldy #27
    jsr print_byte_dec
+   rts
+
+init_palette:
+   jsr load_pal_file
+   lda file_error
+   bne @load_default
+   rts
+@load_default:
+   stz file_error
+   ; TODO stop LED flashing
+   stz VERA_ctrl
+   VERA_SET_ADDR VRAM_palette,1
+   ldx #0
+@loop1:
+   lda default_palette,x
+   sta VERA_data0
+   inx
+   bne @loop1
+@loop2:
+   lda default_palette_midpoint,x
+   sta VERA_data0
+   inx
+   bne @loop2
    rts
