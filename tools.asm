@@ -60,17 +60,13 @@ init_tools:
    iny
    cpy #(end_tool_strings - tool_strings)
    bne @loop
-   ; clear latches and refresh all tools
-   jsr tools_clear_latches
+   ; refresh all tools
+   jsr tools_reset
    rts
 
-tools_clear_latches:
+tools_reset:
    phx
    phy
-   stz color_switch_latch
-   stz tile_height_latch
-   stz tile_width_latch
-   stz color_depth_latch
    ldy #0
    lda #<tool_string_table
    sta ZP_PTR_1
@@ -101,6 +97,8 @@ tools_clear_latches:
 
 
 tools_click:
+   lda button_latch
+   bne @return
    cpy #COLOR_SWITCH_Y
    bne @check_buttons
    cpx #COLOR_SWITCH_X
@@ -139,11 +137,7 @@ tools_click:
    
 
 next_width:
-   lda tile_width_latch
-   beq @engage
-   rts
-@engage:
-   inc tile_width_latch
+   inc button_latch
    lda tile_width
    asl
    cmp #64 ; TODO - support 64
@@ -194,11 +188,7 @@ next_width:
    jmp print_byte_dec ; tail-optimization
 
 next_height:
-   lda tile_height_latch
-   beq @engage
-   rts
-@engage:
-   inc tile_height_latch
+   inc button_latch
    lda tile_height
    asl
    cmp #64 ; TODO - support 64
@@ -251,11 +241,7 @@ next_height:
 string256: .asciiz "256"
 
 next_color_depth:
-   lda color_depth_latch
-   beq @engage
-   rts
-@engage:
-   inc color_depth_latch
+   inc button_latch
    lda bits_per_pixel
    asl
    cmp #16
@@ -295,9 +281,7 @@ next_color_depth:
    
 
 switch_colors:
-   lda color_switch_latch
-   bne @return
-   inc color_switch_latch
+   inc button_latch
    PRINT_REVERSED_TOOL_STRING color_switch_string,COLOR_SWITCH_X,COLOR_SWITCH_Y
    lda bg_color
    pha

@@ -43,12 +43,13 @@ start:
    jsr get_mouse_xy
    bit #1 ; process left button click first
    pha ; store button state on stack
-   beq @clear_latches
+   beq @clear_latch
    jsr left_click
    bra @check_right_button
-@clear_latches:
-   jsr tileviz_clear_latches
-   jsr tools_clear_latches
+@clear_latch:
+   stz button_latch
+   jsr tileviz_reset
+   jsr tools_reset
 @check_right_button:
    pla ; restore button state
    bit #2
@@ -88,6 +89,7 @@ init_globals:
    sta tile_count
    lda #>MAX_16x16x16_TILES
    sta tile_count+1
+   stz button_latch
    rts
 
 left_click:

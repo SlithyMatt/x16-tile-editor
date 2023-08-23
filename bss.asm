@@ -46,16 +46,7 @@ tile_num_x: .res 1
 TILE_ADDR_X = 11
 TILE_ADDR_Y = 51
 
-prev_latch: .res 1
-next_latch: .res 1
-offset_up_latch: .res 1
-offset_down_latch: .res 1
-
-
-color_switch_latch: .res 1
-tile_width_latch: .res 1
-tile_height_latch: .res 1
-color_depth_latch: .res 1
+button_latch: .res 1
 
 scratch_tile: .res 1024
 
@@ -68,4 +59,5 @@ pal_filename: .res 256
 file_error: .res 1
 file_sa: .res 1
 
+rgb_gui_on: .res 1
 

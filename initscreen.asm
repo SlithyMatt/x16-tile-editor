@@ -452,14 +452,14 @@ init_next_string:
 .byte $71,$40,$7d
 
 arrowheads:
-.byte %11000000
-.byte %11110000
-.byte %11111100
-.byte %11111111
-.byte %11111111
-.byte %11111100
-.byte %11110000
-.byte %11000000
+.byte %01000000
+.byte %01110000
+.byte %01111100
+.byte %01111111
+.byte %01111111
+.byte %01111100
+.byte %01110000
+.byte %01000000
 
 .byte %00011000
 .byte %00011000
@@ -468,9 +468,8 @@ arrowheads:
 .byte %01111110
 .byte %01111110
 .byte %11111111
-.byte %11111111
+.byte %00000000
 
-.byte %11111111
 .byte %11111111
 .byte %01111110
 .byte %01111110
@@ -478,15 +477,16 @@ arrowheads:
 .byte %00111100
 .byte %00011000
 .byte %00011000
+.byte %00000000
 
-.byte %00000011
-.byte %00001111
-.byte %00111111
-.byte %11111111
-.byte %11111111
-.byte %00111111
-.byte %00001111
-.byte %00000011
+.byte %00000001
+.byte %00000111
+.byte %00011111
+.byte %01111111
+.byte %01111111
+.byte %00011111
+.byte %00000111
+.byte %00000001
 
 TEXT_START = $1B000
 PAL_VIZ = TEXT_START+$503

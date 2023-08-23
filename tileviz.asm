@@ -13,7 +13,7 @@ init_tileviz:
    sta next_tile_x
    lda #46
    sta tile_num_x
-   jsr tileviz_clear_latches
+   jsr tileviz_reset
    stz VERA_ctrl
    lda #($10 | ^PREVIEW_SPRITE_ATTR)
    sta VERA_addr_bank
@@ -480,16 +480,8 @@ scale_sprite_to_4bpp:
    bne @scale_loop2
    rts
 
-
-
-
-
-tileviz_clear_latches:
+tileviz_reset:
    phx
-   stz prev_latch
-   stz next_latch
-   stz offset_down_latch
-   stz offset_up_latch
    stz VERA_ctrl
    lda #$21
    sta VERA_addr_bank
@@ -508,12 +500,12 @@ tileviz_clear_latches:
    rts
 
 tile_navigate:
+   lda button_latch
+   bne @return
    cpx #PREV_TILE_X
    bmi @return
    cpx #PREV_TILE_X+12
    bpl @check_down
-   lda prev_latch
-   bne @return
    lda tile_index
    beq @return
    jsr do_prev
@@ -521,8 +513,6 @@ tile_navigate:
 @check_down:
    cpx offset_down_tile_x
    bne @check_up
-   lda offset_down_latch
-   bne @return
    lda palette_offset
    beq @return
    jsr do_offset_down
@@ -530,8 +520,6 @@ tile_navigate:
 @check_up:
    cpx offset_up_tile_x
    bne @check_next
-   lda offset_up_latch
-   bne @return
    lda palette_offset
    cmp #15
    beq @return
@@ -546,15 +534,13 @@ tile_navigate:
    stx SB1
    cmp SB1
    bmi @return
-   lda next_latch
-   bne @return
    ; TODO check for last tile
    jmp do_next ; tail-optimization
 @return:
    rts
 
 do_prev:
-   inc prev_latch
+   inc button_latch
    dec tile_index
    stz VERA_ctrl
    lda #$21
@@ -574,7 +560,7 @@ do_prev:
    jmp load_tile ; tail-optimization
 
 do_next:
-   inc next_latch
+   inc button_latch
    inc tile_index
    stz VERA_ctrl
    lda #$21
@@ -595,17 +581,21 @@ do_next:
    jmp load_tile ; tail-optimization
 
 do_offset_down:
-   inc offset_down_latch
-   dec palette_offset
-
-
+   inc button_latch
+   lda palette_offset
+   dec
+   and #$0F
+   sta palette_offset
+   ; TODO print PO
    jmp load_tile ; tail-optimization
 
 do_offset_up:
-   inc offset_up_latch
-   inc palette_offset
-
-
+   inc button_latch
+   lda palette_offset
+   inc
+   and #$0F
+   sta palette_offset
+   ; TODO print PO
    jmp load_tile ; tail-optimization
 
 check_tileviz_xy:

@@ -113,8 +113,11 @@ print_byte_dec: ; A = byte to print in decimal
    dex
    bne @loop
    cld
+   lda #1
+   sta print_space
    lda print_bcd+1
    beq @print_space1
+   stz print_space
    ora #$30
    bra @print1
 @print_space1:
@@ -128,9 +131,12 @@ print_byte_dec: ; A = byte to print in decimal
    lsr
    cmp #0
    beq @print_space2
+@num2:
    ora #$30
    bra @print2
 @print_space2:
+   lda print_space
+   beq @num2
    lda #$20
 @print2:
    sta VERA_data0
@@ -174,23 +180,23 @@ print_vaddr: ; A = ZP address of pointer to 3-byte VRAM address
    jsr print_load_addrs
    ldy #2
    lda (IND_VEC),y
-   jsr _print_hex_digit
+   jsr get_hex_char
+   sta VERA_data0
    dey
    lda (IND_VEC),y
    jsr _print_hex_byte
    lda (IND_VEC)
    jmp _print_hex_byte ; tail-optimization
 
-_print_hex_digit:  ; A = hex digit (in lower nybble -- upper nybble should be clear)
+get_hex_char:
    cmp #$A
    bpl @letter
    ora #$30
-   bra @print
+   bra @return
 @letter:
    clc
    adc #$37
-@print:
-   sta VERA_data0
+@return:
    rts
 
 print_byte_hex: ; A = byte value to print in hex; X,Y = coordinates
@@ -203,10 +209,13 @@ _print_hex_byte: ; A = byte value to print in hex
    lsr
    lsr
    lsr
-   jsr _print_hex_digit
+   jsr get_hex_char
+   sta VERA_data0
    pla
    and #$0F
-   jmp _print_hex_digit ; tail-optimization
+   jsr get_hex_char
+   sta VERA_data0
+   rts
 
 print_string: ; A = ZP address of pointer to null-terminated string (max length = 255)
                ; X,Y = coordinates to print
