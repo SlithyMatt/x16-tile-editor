@@ -110,6 +110,7 @@ load_tile:
    tax
    rol
    and #$1
+   jsr apply_offset
    sta VERA_data1
    dec SB1
    dey
@@ -117,6 +118,7 @@ load_tile:
    txa
    asl
    rol
+   jsr apply_offset
    tax
    bra @last_pixel
 @split_2:
@@ -128,6 +130,7 @@ load_tile:
    tax
    rol
    and #$3
+   jsr apply_offset
    sta VERA_data1
    dec SB1
    dey
@@ -137,6 +140,7 @@ load_tile:
    rol
    rol
    and #3
+   jsr apply_offset
    tax
    bra @last_pixel
 @split_4:
@@ -145,10 +149,12 @@ load_tile:
    lsr
    lsr
    lsr
+   jsr apply_offset
    sta VERA_data1
    dec SB1
    txa
    and #$0F
+   jsr apply_offset
    tax
 @last_pixel:
    stx VERA_data1
@@ -169,7 +175,9 @@ load_tile:
    lda #<TILE_VIZ
    sta VERA_addr_low
    dec SB2
-   bne @render_tile
+   beq @calculate_height
+   jmp @render_tile
+@calculate_height:
    lda tile_viz_height
    sec
    sbc tile_height
@@ -332,6 +340,16 @@ load_tile:
    lda palette_offset
    ora SB1
    sta VERA_data0
+   rts
+
+apply_offset:
+   sta SB3
+   lda palette_offset
+   asl
+   asl
+   asl
+   asl
+   ora SB3
    rts
 
 center_preview_sprite:
@@ -517,12 +535,22 @@ tileviz_reset:
    lda #(PREV_TILE_X * 2)
    sta VERA_addr_low
    ldx #0
-@loop:
+@prev_loop:
    lda init_prev_string,x
    sta VERA_data0
    inx
-   cpx #59
-   bne @loop
+   cpx #11
+   bne @prev_loop
+   lda next_tile_x
+   asl
+   sta VERA_addr_low
+   ldx #0
+@next_loop:
+   lda init_next_string,x
+   sta VERA_data0
+   inx
+   cpx #7
+   bne @next_loop
    plx
    rts
 
@@ -613,8 +641,18 @@ do_offset_down:
    dec
    and #$0F
    sta palette_offset
-   ; TODO print PO
+   jsr print_offset
    jmp load_tile ; tail-optimization
+
+print_offset:
+   lda palette_offset
+   ldx offset_down_tile_x
+   ldy #3
+   jsr print_byte_dec
+   lda #$2D ; backfill minus character
+   ldx offset_down_tile_x
+   ldy #3
+   jmp print_char ; tail-optimization
 
 do_offset_up:
    inc button_latch
@@ -622,7 +660,7 @@ do_offset_up:
    inc
    and #$0F
    sta palette_offset
-   ; TODO print PO
+   jsr print_offset
    jmp load_tile ; tail-optimization
 
 check_tileviz_xy:
