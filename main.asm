@@ -128,6 +128,10 @@ right_click:
 @check_palette:
    cpy #21
    bpl @return
+   cpx #1
+   bmi @return
+   cpx #17
+   bpl @return
    jsr palette_rightclick
 @return:
    rts

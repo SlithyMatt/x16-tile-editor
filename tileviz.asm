@@ -741,8 +741,12 @@ tileviz_xy_to_vram:
    sta VERA_addr_bank 
    rts
 
-tileviz_set_pixel: ; A = 8-bit color index
+tileviz_set_pixel: ; A = 8-bit color index, X = clicked tile X
    sta SB1
+   txa
+   sec
+   sbc #TILE_VIZ_X
+   tax ; X = tile pixel X
    lda bits_per_pixel
    cmp #1
    beq @set1bpp
