@@ -2,10 +2,11 @@ tool_strings:
 
 COLOR_SWITCH_X = 8
 COLOR_SWITCH_Y = 24
-color_switch_string:
-   .asciiz "<>"
+color_switch_string: .asciiz "<>"
 
-
+CLEAR_BTN_X = 10
+CLEAR_BTN_Y = 30
+clear_button_string: .asciiz " Clear "
 
 end_tool_strings:
 
@@ -38,6 +39,7 @@ TOOL_STRINGS_REVERSED = $0400
 
 tool_string_table:
    STRING_TABLE_ENTRY color_switch_string,COLOR_SWITCH_X,COLOR_SWITCH_Y
+   STRING_TABLE_ENTRY clear_button_string,CLEAR_BTN_X,CLEAR_BTN_Y
 end_tool_string_table:
 
 init_tools:
@@ -105,8 +107,18 @@ tools_click:
    bmi @return
    cpx #(COLOR_SWITCH_X+2)
    bpl @return
-   jsr switch_colors
+   jmp switch_colors ; tail-optimization
 @check_buttons:
+   cpy #CLEAR_BTN_Y
+   bne @check_tile_width
+   cpx #CLEAR_BTN_X
+   bmi @check_dropper
+   cpx #(CLEAR_BTN_X+8)
+   bpl @return
+   jmp clear_tile ; tail-optimization
+@check_dropper:
+   ; TODO
+@check_tile_width:
    cpy #TILE_WIDTH_Y
    bne @check_tile_height
    cpx #TILE_WIDTH_X
@@ -135,6 +147,41 @@ tools_click:
 @return:
    rts
    
+clear_tile:
+   inc button_latch
+   PRINT_REVERSED_TOOL_STRING clear_button_string,CLEAR_BTN_X,CLEAR_BTN_Y
+   lda bits_per_pixel
+   sta SB1
+   lda tile_width
+   sta SB2
+@shift_width:
+   lda #8
+   cmp SB1
+   beq @set_width
+   lsr SB2
+   asl SB1
+   bra @shift_width
+@set_width:
+   ldx SB2
+   ldy tile_height
+   stz VERA_ctrl
+   lda #$10
+   clc
+   adc tile_addr+2
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+@loop:
+   stz VERA_data0
+   dex
+   bne @loop
+   ldx SB2
+   dey
+   bne @loop
+   jmp load_tile ; tail-optimization
+
 
 next_width:
    inc button_latch
