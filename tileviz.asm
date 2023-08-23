@@ -1,6 +1,6 @@
 PREVIEW_SPRITE_ATTR = $1FC08
-PREVIEW_SPRITE_X = 64
-PREVIEW_SPRITE_Y = 360
+PREVIEW_SPRITE_X = 40
+PREVIEW_SPRITE_Y = 336
 TILE_VIZ_X = 20
 TILE_VIZ_Y = 5
 
@@ -23,13 +23,14 @@ init_tileviz:
    sta VERA_addr_low
    stz VERA_data0
    stz VERA_data0
-   lda #<PREVIEW_SPRITE_X
+   jsr center_preview_sprite
+   lda preview_x
    sta VERA_data0
-   lda #>PREVIEW_SPRITE_X
+   lda preview_x+1
    sta VERA_data0
-   lda #<PREVIEW_SPRITE_Y
+   lda preview_y
    sta VERA_data0
-   lda #>PREVIEW_SPRITE_Y
+   lda preview_y+1
    sta VERA_data0
    lda #$0C ; Z = 3, no flips
    sta VERA_data0
@@ -297,11 +298,14 @@ load_tile:
 @scale_to_4bpp:
    jsr scale_sprite_to_4bpp
 @setxy:
-   ; TODO set X/Y
-   lda VERA_data0
-   lda VERA_data0
-   lda VERA_data0
-   lda VERA_data0
+   lda preview_x
+   sta VERA_data0
+   lda preview_x+1
+   sta VERA_data0
+   lda preview_y
+   sta VERA_data0
+   lda preview_y+1
+   sta VERA_data0
    lda VERA_data0 ; preserve Z and flips
    ; set height/width/PO
    lda tile_height
@@ -328,6 +332,29 @@ load_tile:
    lda palette_offset
    ora SB1
    sta VERA_data0
+   rts
+
+center_preview_sprite:
+   lda #64
+   sec
+   sbc tile_width
+   lsr
+   clc
+   adc #<PREVIEW_SPRITE_X
+   sta preview_x
+   lda #0
+   adc #>PREVIEW_SPRITE_X
+   sta preview_x+1
+   lda #64
+   sec
+   sbc tile_height
+   lsr
+   clc
+   adc #<PREVIEW_SPRITE_Y
+   sta preview_y
+   lda #0
+   adc #>PREVIEW_SPRITE_Y
+   sta preview_y+1
    rts
 
 SCALED_4BPP_SPRITE_VRAM = $1EC00

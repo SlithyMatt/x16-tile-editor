@@ -46,6 +46,9 @@ tile_num_x: .res 1
 TILE_ADDR_X = 11
 TILE_ADDR_Y = 51
 
+preview_x: .res 2
+preview_y: .res 2
+
 button_latch: .res 1
 
 scratch_tile: .res 1024

@@ -181,6 +181,7 @@ next_width:
    sta VERA_data0
    dex
    bne @loop
+   jsr center_preview_sprite
    jsr load_tile
    lda tile_width
    ldx #(TILE_WIDTH_X-1)
@@ -231,6 +232,7 @@ next_height:
    sta VERA_data0
    dex
    bne @loop
+   jsr center_preview_sprite
    jsr load_tile
    lda tile_height
    ldx #(TILE_HEIGHT_X-1)

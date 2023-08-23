@@ -110,6 +110,8 @@ left_click:
    bpl @check_tools
    cpx #1
    bmi @return
+   cpx #17
+   bpl @return
    jsr palette_leftclick
    bra @return
 @check_tools:
