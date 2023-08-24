@@ -124,7 +124,7 @@ right_click:
    bmi @return
    cpx #TILE_VIZ_X
    bmi @check_palette
-   jsr tileviz_rightclick
+   jmp tileviz_rightclick ; tail-optimization
 @check_palette:
    cpy #21
    bpl @return
@@ -132,7 +132,7 @@ right_click:
    bmi @return
    cpx #17
    bpl @return
-   jsr palette_rightclick
+   jmp palette_rightclick ; tail-optimization
 @return:
    rts
 
