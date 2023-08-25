@@ -4,6 +4,73 @@ PREVIEW_SPRITE_Y = 336
 TILE_VIZ_X = 20
 TILE_VIZ_Y = 5
 
+max_tiles:
+   .word 256   ; 8x8x1bpp
+   .word 1024  ; 8x8x2bpp
+   .word 1024  ; 8x8x4bpp
+   .word 1024  ; 8x8x8bpp
+   .word 256   ; 8x16x1bpp
+   .word 1024  ; 8x16x2bpp
+   .word 1024  ; 8x16x4bpp
+   .word 848   ; 8x16x8bpp
+   .word 256   ; 8x32x1bpp - invalid
+   .word 1024  ; 8x32x2bpp - invalid
+   .word 848   ; 8x32x4bpp
+   .word 424   ; 8x32x8bpp
+   .word 256   ; 8x64x1bpp - invalid
+   .word 848   ; 8x64x2bpp - invalid
+   .word 424   ; 8x64x4bpp
+   .word 212   ; 8x64x8bpp
+   .word 256   ; 16x8x1bpp
+   .word 1024  ; 16x8x2bpp
+   .word 1024  ; 16x8x4bpp
+   .word 848   ; 16x8x8bpp
+   .word 256   ; 16x16x1bpp
+   .word 1024  ; 16x16x2bpp
+   .word 848   ; 16x16x4bpp
+   .word 424   ; 16x16x8bpp
+   .word 256   ; 16x32x1bpp - invalid
+   .word 848   ; 16x32x2bpp - invalid
+   .word 424   ; 16x32x4bpp
+   .word 212   ; 16x32x8bpp
+   .word 256   ; 16x64x1bpp - invalid
+   .word 424   ; 16x64x2bpp - invalid
+   .word 212   ; 16x64x4bpp
+   .word 106   ; 16x64x8bpp
+   .word 256   ; 32x8x1bpp - invalid
+   .word 1024  ; 32x8x2bpp - invalid
+   .word 848   ; 32x8x4bpp
+   .word 424   ; 32x8x8bpp
+   .word 256   ; 32x16x1bpp - invalid
+   .word 848   ; 32x16x2bpp - invalid
+   .word 424   ; 32x16x4bpp
+   .word 212   ; 32x16x8bpp
+   .word 256   ; 32x32x1bpp - invalid
+   .word 424   ; 32x32x2bpp - invalid
+   .word 212   ; 32x32x4bpp
+   .word 106   ; 32x32x8bpp
+   .word 256   ; 32x64x1bpp - invalid
+   .word 212   ; 32x64x2bpp - invalid
+   .word 106   ; 32x64x4bpp
+   .word 53    ; 32x64x8bpp
+   .word 256   ; 64x8x1bpp - invalid
+   .word 848   ; 64x8x2bpp - invalid
+   .word 424   ; 64x8x4bpp
+   .word 212   ; 64x8x8bpp
+   .word 256   ; 64x16x1bpp - invalid
+   .word 424   ; 64x16x2bpp - invalid
+   .word 212   ; 64x16x4bpp
+   .word 106   ; 64x16x8bpp
+   .word 256   ; 64x32x1bpp - invalid
+   .word 212   ; 64x32x2bpp - invalid
+   .word 106   ; 64x32x4bpp
+   .word 53    ; 64x32x8bpp
+   .word 212   ; 64x64x1bpp - invalid
+   .word 106   ; 64x64x2bpp - invalid
+   .word 53    ; 64x64x4bpp
+   .word 26    ; 64x64x8bpp
+
+
 init_tileviz:
    lda #(PREV_TILE_X+34)
    sta offset_down_tile_x
@@ -36,6 +103,54 @@ init_tileviz:
    sta VERA_data0
    lda #$50 ; 16x16, PO = 0
    sta VERA_data0
+   rts
+
+reset_tile_count:
+   lda tile_width
+   lsr
+   lsr
+   lsr
+   lsr
+   bit #$04
+   beq @reset_width
+   lda #$30
+   bra @add_height
+@reset_width:
+   asl
+   asl
+   asl
+   asl
+@add_height:
+   sta SB1
+   lda tile_height
+   lsr
+   lsr
+   lsr
+   lsr
+   bit #$04
+   beq @reset_height
+   lda #$C0
+   bra @add_depth
+@reset_height:
+   asl
+   asl
+@add_depth:
+   ora SB1
+   sta SB1
+   lda bits_per_pixel
+   lsr
+   bit #$04
+   beq @set_index
+   lda #$03
+@set_index:
+   ora SB1
+   asl
+   tax
+   lda max_tiles,x
+   ; TODO handle user-limited tile count
+   sta tile_count
+   lda max_tiles+1,x
+   sta tile_count+1
    rts
 
 load_tile:
@@ -562,24 +677,24 @@ tile_navigate:
    cpx #PREV_TILE_X+12
    bpl @check_down
    lda tile_index
+   bne @do_prev
+   lda tile_index+1
    beq @return
-   jsr do_prev
-   rts
+@do_prev:
+   jmp do_prev ; tail-optimization
 @check_down:
    cpx offset_down_tile_x
    bne @check_up
    lda palette_offset
    beq @return
-   jsr do_offset_down
-   rts
+   jmp do_offset_down ; tail-optimization
 @check_up:
    cpx offset_up_tile_x
    bne @check_next
    lda palette_offset
    cmp #15
    beq @return
-   jsr do_offset_up
-   rts
+   jmp do_offset_up ; tail-optimization
 @check_next:
    cpx next_tile_x
    bmi @return
@@ -616,7 +731,24 @@ do_prev:
 
 do_next:
    inc button_latch
-   inc tile_index
+   lda tile_index
+   clc
+   adc #1
+   sta SB1
+   lda tile_index+1
+   adc #0
+   sta SB2
+   cmp tile_count+1
+   bne @increment
+   lda SB1
+   cmp tile_count
+   bne @increment
+   rts
+@increment:
+   lda SB1
+   sta tile_index
+   lda SB2
+   sta tile_index+1
    stz VERA_ctrl
    lda #$21
    sta VERA_addr_bank

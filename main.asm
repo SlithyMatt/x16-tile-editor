@@ -17,7 +17,6 @@
 .include "files.asm"
 
 TILE_MAP = $1A800
-MAX_16x16x16_TILES = 848
 
 start:
    jsr init_globals
@@ -85,10 +84,7 @@ init_globals:
    sta tile_viz_width
    lda #52
    sta tile_viz_height
-   lda #<MAX_16x16x16_TILES
-   sta tile_count
-   lda #>MAX_16x16x16_TILES
-   sta tile_count+1
+   jsr reset_tile_count
    stz button_latch
    rts
 

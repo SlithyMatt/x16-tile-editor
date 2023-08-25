@@ -233,7 +233,8 @@ next_width:
    lda tile_width
    ldx #(TILE_WIDTH_X-1)
    ldy #TILE_WIDTH_Y
-   jmp print_byte_dec ; tail-optimization
+   jsr print_byte_dec
+   jmp reset_tile_count ; tail-optimization
 
 next_height:
    inc button_latch
@@ -284,7 +285,8 @@ next_height:
    lda tile_height
    ldx #(TILE_HEIGHT_X-1)
    ldy #TILE_HEIGHT_Y
-   jmp print_byte_dec ; tail-optimization
+   jsr print_byte_dec
+   jmp reset_tile_count ; tail-optimization
 
 
 string256: .asciiz "256"
@@ -326,7 +328,8 @@ next_color_depth:
    ldy #COLOR_DEPTH_Y
    jsr print_string
 @update:
-   jmp load_tile ; tail-optimization
+   jsr load_tile
+   jmp reset_tile_count ; tail-optimization
    
 
 switch_colors:
