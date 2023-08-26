@@ -8,6 +8,18 @@ CLEAR_BTN_X = 10
 CLEAR_BTN_Y = 30
 clear_button_string: .asciiz " Clear "
 
+DROPPER_BTN_X = 2
+DROPPER_BTN_Y = CLEAR_BTN_Y
+dropper_button_string: .asciiz "Dropper"
+
+COPY_BTN_X = DROPPER_BTN_X
+COPY_BTN_Y = DROPPER_BTN_Y+2
+copy_button_string: .asciiz " Copy  "
+
+PASTE_BTN_X = CLEAR_BTN_X
+PASTE_BTN_Y = COPY_BTN_Y
+paste_button_string: .asciiz " Paste "
+
 end_tool_strings:
 
 TILE_WIDTH_X = 9
@@ -40,6 +52,9 @@ TOOL_STRINGS_REVERSED = $0400
 tool_string_table:
    STRING_TABLE_ENTRY color_switch_string,COLOR_SWITCH_X,COLOR_SWITCH_Y
    STRING_TABLE_ENTRY clear_button_string,CLEAR_BTN_X,CLEAR_BTN_Y
+   STRING_TABLE_ENTRY dropper_button_string,DROPPER_BTN_X,DROPPER_BTN_Y
+   STRING_TABLE_ENTRY copy_button_string,COPY_BTN_X,COPY_BTN_Y
+   STRING_TABLE_ENTRY paste_button_string,PASTE_BTN_X,PASTE_BTN_Y
 end_tool_string_table:
 
 init_tools:
@@ -110,14 +125,32 @@ tools_click:
    jmp switch_colors ; tail-optimization
 @check_buttons:
    cpy #CLEAR_BTN_Y
-   bne @check_tile_width
+   bne @check_copy
    cpx #CLEAR_BTN_X
    bmi @check_dropper
    cpx #(CLEAR_BTN_X+8)
    bpl @return
    jmp clear_tile ; tail-optimization
 @check_dropper:
-   ; TODO
+   cpx #DROPPER_BTN_X
+   bmi @return
+   cpx #(DROPPER_BTN_X+8)
+   bpl @return
+   jmp start_dropper ; tail-optimization
+@check_copy:
+   cpy #COPY_BTN_Y
+   bne @check_tile_width
+   cpx #COPY_BTN_X
+   bmi @return
+   cpx #(COPY_BTN_X+8)
+   bpl @check_paste
+   jmp copy_tile ; tail-optimization
+@check_paste:
+   cpx #PASTE_BTN_X
+   bmi @return
+   cpx #(PASTE_BTN_X+8)
+   bpl @return
+   jmp paste_tile ; tail-optimization
 @check_tile_width:
    cpy #TILE_WIDTH_Y
    bne @check_tile_height
@@ -182,6 +215,23 @@ clear_tile:
    bne @loop
    jmp load_tile ; tail-optimization
 
+start_dropper:
+   inc button_latch
+   PRINT_REVERSED_TOOL_STRING dropper_button_string,DROPPER_BTN_X,DROPPER_BTN_Y
+   ; TODO - stuff
+   rts
+
+copy_tile:
+   inc button_latch
+   PRINT_REVERSED_TOOL_STRING copy_button_string,COPY_BTN_X,COPY_BTN_Y
+   ; TODO - stuff
+   rts
+
+paste_tile:
+   inc button_latch
+   PRINT_REVERSED_TOOL_STRING paste_button_string,PASTE_BTN_X,PASTE_BTN_Y
+   ; TODO - stuff
+   rts
 
 next_width:
    inc button_latch
