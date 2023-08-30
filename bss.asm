@@ -51,7 +51,7 @@ preview_y: .res 2
 
 button_latch: .res 1
 
-scratch_tile: .res 1024
+scratch_tile: .res 4096
 
 tile_filename_prefix: .res 2
 tile_filename: .res 256

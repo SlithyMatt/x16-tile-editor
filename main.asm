@@ -2,7 +2,7 @@
 .bss
 .include "bss.asm"
 
-.org $2000 ; TODO: Change to $C000 for ROM
+.org $3000 ; TODO: Change to $C000 for ROM
 .code
    jmp start
 

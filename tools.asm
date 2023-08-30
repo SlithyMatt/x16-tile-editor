@@ -322,17 +322,93 @@ start_dropper:
    sta VERA_data0
    rts
 
+get_tile_size: ; output: Y/X = bytes in tile asset
+   lda bits_per_pixel
+   sta SB1
+   lda tile_width
+   sta SB2
+@shift_width:
+   lda #8
+   cmp SB1
+   beq @set_width
+   lsr SB2
+   asl SB1
+   bra @shift_width
+@set_width:
+   lda tile_height
+   stz SB1
+@multiply:
+   lsr SB2
+   beq @done
+   asl
+   rol SB1
+   bra @multiply
+@done:
+   ldx SB1
+   tay
+   rts
+
 copy_tile:
    inc button_latch
    PRINT_REVERSED_TOOL_STRING copy_button_string,COPY_BTN_X,COPY_BTN_Y
-   ; TODO - stuff
+   stz VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   jsr get_tile_size
+   lda #<scratch_tile
+   sta ZP_PTR_1
+   lda #>scratch_tile
+   sta ZP_PTR_1+1
+@loop:
+   dey
+   cpy #$FF
+   bne @copy_byte
+   cpx #0
+   beq @done
+   dex
+   inc ZP_PTR_1+1
+@copy_byte:
+   lda VERA_data0
+   sta (ZP_PTR_1),y
+   bra @loop
+@done:
    rts
 
 paste_tile:
    inc button_latch
    PRINT_REVERSED_TOOL_STRING paste_button_string,PASTE_BTN_X,PASTE_BTN_Y
-   ; TODO - stuff
-   rts
+   stz VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   jsr get_tile_size
+   lda #<scratch_tile
+   sta ZP_PTR_1
+   lda #>scratch_tile
+   sta ZP_PTR_1+1
+@loop:
+   dey
+   cpy #$FF
+   bne @copy_byte
+   cpx #0
+   beq @done
+   dex
+   inc ZP_PTR_1+1
+@copy_byte:
+   lda (ZP_PTR_1),y
+   sta VERA_data0
+   bra @loop
+@done:
+   jmp load_tile ; tail-optimization
 
 next_width:
    inc button_latch
