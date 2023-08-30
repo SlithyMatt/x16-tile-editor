@@ -35,6 +35,7 @@ palette_getindex: ; input: X,Y = screen coordinates
 
 palette_sel_update:
    ; load foreground color
+   stz VERA_ctrl
    VERA_SET_ADDR FG_COLOR_BOX,2
    ldx #3
 @fgc_loop:

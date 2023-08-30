@@ -963,7 +963,11 @@ tileviz_set_pixel: ; A = 8-bit color index, X = clicked tile X
 tileviz_leftclick:
    jsr check_tileviz_xy
    bpl @return
-   jsr tileviz_xy_to_vram
+   lda dropper
+   beq @set
+   jmp tileviz_getcolor ; tail-optimization
+@set:
+   jsr tileviz_xy_to_vram  
    lda fg_color
    jmp tileviz_set_pixel ; tail-optimization
 @return:
@@ -977,3 +981,22 @@ tileviz_rightclick:
    jmp tileviz_set_pixel ; tail-optimization
 @return:
    rts
+
+tileviz_getcolor:
+   stz VERA_ctrl
+   lda #$11
+   sta VERA_addr_bank
+   tya
+   clc
+   adc #$B0
+   sta VERA_addr_high
+   txa
+   asl
+   inc
+   sta VERA_addr_low
+   lda VERA_data0
+   sta fg_color
+   jsr palette_sel_update
+   stz dropper
+   jmp reset_mouse_cursor ; tail-optimization
+   

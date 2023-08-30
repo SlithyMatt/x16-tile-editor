@@ -64,3 +64,4 @@ file_sa: .res 1
 
 rgb_gui_on: .res 1
 
+dropper: .res 1

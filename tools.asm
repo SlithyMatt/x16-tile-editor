@@ -57,7 +57,32 @@ tool_string_table:
    STRING_TABLE_ENTRY paste_button_string,PASTE_BTN_X,PASTE_BTN_Y
 end_tool_string_table:
 
+
+VRAM_DEFAULT_CURSOR = $1EC80
+VRAM_DROPPER_CURSOR = $1ED00
+
+dropper_cursor:
+   .byte $21,$10,$00,$00,$00,$00,$00,$00
+   .byte $12,$11,$00,$00,$00,$00,$00,$00
+   .byte $11,$22,$11,$00,$00,$00,$00,$00
+   .byte $01,$22,$22,$10,$00,$00,$00,$00
+   .byte $00,$12,$20,$01,$00,$00,$00,$00
+   .byte $00,$12,$00,$00,$10,$10,$00,$00
+   .byte $00,$01,$00,$00,$01,$11,$00,$00
+   .byte $00,$00,$10,$00,$11,$11,$00,$00
+   .byte $00,$00,$01,$01,$11,$11,$10,$00
+   .byte $00,$00,$00,$11,$11,$11,$11,$00
+   .byte $00,$00,$01,$11,$11,$11,$11,$10
+   .byte $00,$00,$00,$11,$11,$11,$11,$10
+   .byte $00,$00,$00,$00,$11,$11,$11,$11
+   .byte $00,$00,$00,$00,$01,$11,$11,$11
+   .byte $00,$00,$00,$00,$00,$11,$11,$10
+   .byte $00,$00,$00,$00,$00,$00,$11,$00
+
+
 init_tools:
+   ; init tool variables
+   stz dropper
    ; copy reveresed strings
    lda #<tool_strings
    sta ZP_PTR_1
@@ -77,8 +102,77 @@ init_tools:
    iny
    cpy #(end_tool_strings - tool_strings)
    bne @loop
+   ; load dropper cursor into VRAM
+   stz VERA_ctrl
+   VERA_SET_ADDR VRAM_DROPPER_CURSOR,1
+   ldx #0
+@dropper_loop:
+   lda dropper_cursor,x
+   sta VERA_data0
+   inx
+   cpx #128
+   bne @dropper_loop
+   ; copy default cursor sprite to safe part of VRAM
+   VERA_SET_ADDR VRAM_sprattr,1
+   lda VERA_data0
+   sta SB1
+   lda VERA_data0
+   sta SB2
+   ldx #5
+@shift_loop:
+   asl SB1
+   rol SB2
+   dex
+   bne @shift_loop
+   lda #0
+   rol ; A = bank bit
+   ora #$10 ; stride = 1
+   sta VERA_addr_bank
+   lda SB2
+   sta VERA_addr_high
+   lda SB1
+   sta VERA_addr_low
+   lda #1
+   sta VERA_ctrl
+   lda #($10 | ^VRAM_DEFAULT_CURSOR)
+   sta VERA_addr_bank
+   lda #>VRAM_DEFAULT_CURSOR
+   sta VERA_addr_high
+   lda #<VRAM_DEFAULT_CURSOR
+   sta VERA_addr_low
+   ldx #128
+@copy_loop:
+   lda VERA_data0
+   asl
+   asl
+   asl
+   asl
+   bcc @upper_pixel
+   lda #$20 ; replace opaque black with color #2
+@upper_pixel:
+   sta SB1
+   lda VERA_data0
+   bit #$10
+   beq @combine_pixels
+   lda #$02 ; replace opaque black with color #2
+@combine_pixels:
+   ora SB1  ; downsample to 4bpp
+   sta VERA_data1
+   dex
+   bne @copy_loop
+   ; setup sprite zero with default cursor
+   jsr reset_mouse_cursor
    ; refresh all tools
    jsr tools_reset
+   rts
+
+reset_mouse_cursor:
+   stz VERA_ctrl
+   VERA_SET_ADDR VRAM_sprattr,1
+   lda #<(VRAM_DEFAULT_CURSOR>>5)
+   sta VERA_data0
+   lda #(VRAM_DEFAULT_CURSOR>>13)
+   sta VERA_data0
    rts
 
 tools_reset:
@@ -218,7 +312,14 @@ clear_tile:
 start_dropper:
    inc button_latch
    PRINT_REVERSED_TOOL_STRING dropper_button_string,DROPPER_BTN_X,DROPPER_BTN_Y
-   ; TODO - stuff
+   inc dropper
+   ; setup sprite zero with dropper cursor
+   stz VERA_ctrl
+   VERA_SET_ADDR VRAM_sprattr,1
+   lda #<(VRAM_DROPPER_CURSOR>>5)
+   sta VERA_data0
+   lda #(VRAM_DROPPER_CURSOR>>13)
+   sta VERA_data0
    rts
 
 copy_tile:

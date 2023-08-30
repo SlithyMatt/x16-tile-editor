@@ -1,7 +1,11 @@
 init_mouse:
+   ; reset mouse
+   lda #0
+   jsr MOUSE_CONFIG
+   ; use current screen mode to define mouse resolution
    sec
    jsr SCREEN_MODE
-   lda #1
+   lda #1 ; use default cursor
    jsr MOUSE_CONFIG
    rts
 
