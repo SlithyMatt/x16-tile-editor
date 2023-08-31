@@ -58,8 +58,8 @@ tool_string_table:
 end_tool_string_table:
 
 
-VRAM_DEFAULT_CURSOR = $1EC80
-VRAM_DROPPER_CURSOR = $1ED00
+VRAM_DEFAULT_CURSOR = $1EE00
+VRAM_DROPPER_CURSOR = $1EE80
 
 dropper_cursor:
    .byte $21,$10,$00,$00,$00,$00,$00,$00
@@ -360,9 +360,9 @@ copy_tile:
    lda tile_addr
    sta VERA_addr_low
    jsr get_tile_size
-   lda #<scratch_tile
+   lda #<clipboard
    sta ZP_PTR_1
-   lda #>scratch_tile
+   lda #>clipboard
    sta ZP_PTR_1+1
 @loop:
    dey
@@ -391,9 +391,9 @@ paste_tile:
    lda tile_addr
    sta VERA_addr_low
    jsr get_tile_size
-   lda #<scratch_tile
+   lda #<clipboard
    sta ZP_PTR_1
-   lda #>scratch_tile
+   lda #>clipboard
    sta ZP_PTR_1+1
 @loop:
    dey

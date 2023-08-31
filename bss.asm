@@ -51,7 +51,7 @@ preview_y: .res 2
 
 button_latch: .res 1
 
-scratch_tile: .res 4096
+scratch_tile: .res 1024
 
 tile_filename_prefix: .res 2
 tile_filename: .res 256
@@ -65,3 +65,4 @@ file_sa: .res 1
 rgb_gui_on: .res 1
 
 dropper: .res 1
+clipboard: .res 4096
