@@ -22,6 +22,18 @@ paste_button_string: .asciiz " Paste "
 
 end_tool_strings:
 
+SHIFT_UP_X = 9
+SHIFT_UP_Y = 35
+
+SHIFT_LEFT_X = 5
+SHIFT_LEFT_Y = 37
+
+SHIFT_RIGHT_X = 13
+SHIFT_RIGHT_Y = 37
+
+SHIFT_DOWN_X = 9
+SHIFT_DOWN_Y = 39
+
 TILE_WIDTH_X = 9
 TILE_WIDTH_Y = 52
 
@@ -233,7 +245,7 @@ tools_click:
    jmp start_dropper ; tail-optimization
 @check_copy:
    cpy #COPY_BTN_Y
-   bne @check_tile_width
+   bne @check_shift_up
    cpx #COPY_BTN_X
    bmi @return
    cpx #(COPY_BTN_X+8)
@@ -245,6 +257,30 @@ tools_click:
    cpx #(PASTE_BTN_X+8)
    bpl @return
    jmp paste_tile ; tail-optimization
+@return:
+   rts
+@check_shift_up:
+   cpy #SHIFT_UP_Y
+   bne @check_shift_left
+   cpx #SHIFT_UP_X
+   bne @return
+   jmp shift_up ; tail-optimization
+@check_shift_left:
+   cpy #SHIFT_LEFT_Y
+   bne @check_shift_down
+   cpx #SHIFT_LEFT_Y
+   bne @check_shift_right
+   jmp shift_left ; tail-optimization
+@check_shift_right:
+   cpx #SHIFT_RIGHT_X
+   bne @return
+   jmp shift_right ; tail-optimization
+@check_shift_down:
+   cpy #SHIFT_DOWN_Y
+   bne @check_tile_width
+   cpx #SHIFT_DOWN_X
+   bne @return
+   jmp shift_down ; tail-optimization
 @check_tile_width:
    cpy #TILE_WIDTH_Y
    bne @check_tile_height
@@ -271,7 +307,78 @@ tools_click:
    jmp next_color_depth
 @check_hflip:
 
-@return:
+   rts
+
+shift_up:
+   inc button_latch
+   lda bits_per_pixel
+   sta SB1
+   lda tile_width
+   sta SB2
+@calc_loop:
+   lda SB1
+   cmp #8
+   beq @setup_addr
+   asl SB1
+   lsr SB2
+   bra @calc_loop
+@setup_addr:
+   stz VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   lda #1
+   sta VERA_ctrl
+   lda SB2
+   clc
+   adc tile_addr
+   sta VERA_addr_low
+   lda #0
+   adc tile_addr+1
+   sta VERA_addr_high
+   lda #0
+   adc tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda SB2 ; preserve row size
+   pha
+   jsr get_tile_size
+   pla
+   sta SB2
+   tya
+   sec
+   sbc SB2
+   tay
+   txa
+   sbc #0
+   tax
+@copy_loop:
+   lda VERA_data1
+   sta VERA_data0
+   dey
+   bne @copy_loop
+   cpx #0
+   beq @start_blank
+   dex
+   bra @copy_loop
+@start_blank:
+   ldx SB2
+@blank_loop:
+   stz VERA_data0
+   dex
+   bne @blank_loop
+   jmp load_tile ; tail-optimization
+
+shift_left:
+
+shift_right:
+
+shift_down:
+   
    rts
    
 clear_tile:
