@@ -268,7 +268,7 @@ tools_click:
 @check_shift_left:
    cpy #SHIFT_LEFT_Y
    bne @check_shift_down
-   cpx #SHIFT_LEFT_Y
+   cpx #SHIFT_LEFT_X
    bne @check_shift_right
    jmp shift_left ; tail-optimization
 @check_shift_right:
@@ -309,19 +309,26 @@ tools_click:
 
    rts
 
-shift_up:
-   inc button_latch
+get_row_size: ; output: A = bytes per row
    lda bits_per_pixel
    sta SB1
    lda tile_width
    sta SB2
-@calc_loop:
+@loop:
    lda SB1
    cmp #8
-   beq @setup_addr
+   beq @return
    asl SB1
    lsr SB2
-   bra @calc_loop
+   bra @loop
+@return:
+   lda SB2
+   rts
+
+shift_up:
+   inc button_latch
+   jsr get_row_size
+   sta SB2
 @setup_addr:
    stz VERA_ctrl
    lda tile_addr+2
@@ -374,6 +381,74 @@ shift_up:
    jmp load_tile ; tail-optimization
 
 shift_left:
+   inc button_latch
+   jsr get_row_size
+   sta SB1
+   stz VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   lda #1
+   sta VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   ldx #0
+   ldy tile_height
+@read_row:
+   lda VERA_data0
+   sta scratch_tile,x
+   inx
+   cpx SB2
+   bne @read_row
+   lda bits_per_pixel
+   cmp #8
+   bne @bitwise_shift
+   ldx #1
+   bra @write_row
+@bitwise_shift:
+   dex
+   phy
+   ldy bits_per_pixel
+@shift_loop:
+   ldx SB2
+   dex
+   asl scratch_tile,x
+@roll_loop:
+   cpx #0
+   beq @next_bit
+   dex
+   rol scratch_tile,x
+   bra @roll_loop
+@next_bit:
+   dey
+   bne @shift_loop
+@write_row:
+   lda scratch_tile,x
+   sta VERA_data1
+   inx
+   cpx SB2
+   bne @write_row
+   lda bits_per_pixel
+   cmp #8
+   bne @next_row
+   stz VERA_data1
+@next_row:
+   ply
+   dey
+   bne @read_row
+   jmp load_tile ; tail-optimization
+
+
+   
 
 shift_right:
 
