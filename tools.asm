@@ -409,13 +409,13 @@ shift_left:
    inx
    cpx SB1
    bne @read_row
+   phy
    lda bits_per_pixel
    cmp #8
    bne @bitwise_shift
    ldx #1
    bra @write_row
 @bitwise_shift:
-   phy
    ldy bits_per_pixel
 @shift_loop:
    ldx SB1
@@ -450,8 +450,6 @@ shift_left:
    bne @read_row
    jmp load_tile ; tail-optimization
 
-
-   
 
 shift_right:
 
