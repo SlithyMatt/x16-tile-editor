@@ -522,8 +522,67 @@ shift_right:
 
 
 shift_down:
-   
-   rts
+   inc button_latch
+   jsr get_row_size
+   pha
+   jsr get_tile_size
+   pla
+   sta SB1
+   tya
+   clc
+   adc tile_addr
+   sta SB2
+   txa
+   adc tile_addr+1
+   sta SB3
+   lda tile_addr+2
+   adc #0
+   sta SB4
+   stz VERA_ctrl
+   ora #$18
+   sta VERA_addr_bank
+   lda SB3
+   sta VERA_addr_high
+   lda SB2
+   sta VERA_addr_low
+   lda #1
+   sta VERA_ctrl
+   lda SB2
+   sec
+   sbc SB1
+   sta VERA_addr_low
+   lda SB3
+   sbc #0
+   sta VERA_addr_high
+   lda SB4
+   sbc #0
+   ora #$18
+   sta VERA_addr_bank
+   lda VERA_data0 ; bump
+   lda VERA_data1 ; bump
+   tya
+   sec
+   sbc SB1
+   tay
+   txa
+   sbc #0
+   tax
+@copy_loop:
+   lda VERA_data1
+   sta VERA_data0
+   dey
+   bne @copy_loop
+   cpx #0
+   beq @start_blank
+   dex
+   bra @copy_loop
+@start_blank:
+   ldx SB1
+@blank_loop:
+   stz VERA_data0
+   dex
+   bne @blank_loop
+   jmp load_tile ; tail-optimization
    
 clear_tile:
    inc button_latch
