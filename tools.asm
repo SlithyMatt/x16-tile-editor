@@ -407,7 +407,7 @@ shift_left:
    lda VERA_data0
    sta scratch_tile,x
    inx
-   cpx SB2
+   cpx SB1
    bne @read_row
    lda bits_per_pixel
    cmp #8
@@ -415,27 +415,29 @@ shift_left:
    ldx #1
    bra @write_row
 @bitwise_shift:
-   dex
    phy
    ldy bits_per_pixel
 @shift_loop:
-   ldx SB2
+   ldx SB1
    dex
    asl scratch_tile,x
 @roll_loop:
+   php
    cpx #0
    beq @next_bit
    dex
+   plp
    rol scratch_tile,x
    bra @roll_loop
 @next_bit:
+   plp
    dey
    bne @shift_loop
 @write_row:
    lda scratch_tile,x
    sta VERA_data1
    inx
-   cpx SB2
+   cpx SB1
    bne @write_row
    lda bits_per_pixel
    cmp #8
@@ -443,6 +445,7 @@ shift_left:
    stz VERA_data1
 @next_row:
    ply
+   ldx #0
    dey
    bne @read_row
    jmp load_tile ; tail-optimization
