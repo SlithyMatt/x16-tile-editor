@@ -22,6 +22,9 @@ paste_button_string: .asciiz " Paste "
 
 end_tool_strings:
 
+on_string:  .asciiz "On "
+off_string: .asciiz "Off"
+
 SHIFT_UP_X = 9
 SHIFT_UP_Y = 35
 
@@ -42,6 +45,12 @@ TILE_HEIGHT_Y = 53
 
 COLOR_DEPTH_X = 14
 COLOR_DEPTH_Y = 54
+
+HFLIP_X = 9
+HFLIP_Y = 55
+
+VFLIP_X = 9
+VFLIP_Y = 56
 
 TOOL_STRINGS_REVERSED = $0400
 
@@ -304,10 +313,75 @@ tools_click:
    bmi @return
    cpx #(COLOR_DEPTH_X+3)
    bpl @return
-   jmp next_color_depth
+   jmp next_color_depth ; tail-optimization
 @check_hflip:
+   cpy #HFLIP_Y
+   bne @check_vflip
+   cpx #HFLIP_X
+   bmi @return
+   cpx #(HFLIP_X+3)
+   bpl @return
+   jmp toggle_hflip ; tail-optimization
+@check_vflip:
+   cpy #VFLIP_Y
+   bne @return
+   cpx #VFLIP_X
+   bmi @return
+   cpx #(VFLIP_X+3)
+   bpl @return
+   jmp toggle_vflip ; tail-optimization
 
-   rts
+
+toggle_hflip:
+   inc button_latch
+   stz VERA_ctrl
+   VERA_SET_ADDR (PREVIEW_SPRITE_ATTR+6),0
+   lda VERA_data0
+   eor #$01
+   sta VERA_data0
+   bit #$01
+   beq @print_off
+   lda #<on_string
+   sta ZP_PTR_1
+   lda #>on_string
+   sta ZP_PTR_1+1
+   bra @print
+@print_off:
+   lda #<off_string
+   sta ZP_PTR_1
+   lda #>off_string
+   sta ZP_PTR_1+1
+@print:
+   lda #ZP_PTR_1
+   ldx #HFLIP_X
+   ldy #HFLIP_Y
+   jmp print_string ; tail-optimization
+
+toggle_vflip:
+   inc button_latch
+   stz VERA_ctrl
+   VERA_SET_ADDR (PREVIEW_SPRITE_ATTR+6),0
+   lda VERA_data0
+   eor #$02
+   sta VERA_data0
+   bit #$02
+   beq @print_off
+   lda #<on_string
+   sta ZP_PTR_1
+   lda #>on_string
+   sta ZP_PTR_1+1
+   bra @print
+@print_off:
+   lda #<off_string
+   sta ZP_PTR_1
+   lda #>off_string
+   sta ZP_PTR_1+1
+@print:
+   lda #ZP_PTR_1
+   ldx #VFLIP_X
+   ldy #VFLIP_Y
+   jmp print_string ; tail-optimization
+   
 
 get_row_size: ; output: A = bytes per row
    lda bits_per_pixel
