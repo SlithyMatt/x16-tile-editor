@@ -452,6 +452,74 @@ shift_left:
 
 
 shift_right:
+   inc button_latch
+   jsr get_row_size
+   sta SB1
+   stz VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   lda #1
+   sta VERA_ctrl
+   lda tile_addr+2
+   ora #$10
+   sta VERA_addr_bank
+   lda tile_addr+1
+   sta VERA_addr_high
+   lda tile_addr
+   sta VERA_addr_low
+   ldx #0
+   ldy tile_height
+@read_row:
+   lda VERA_data0
+   sta scratch_tile,x
+   inx
+   cpx SB1
+   bne @read_row
+   phy
+   stx SB2
+   lda bits_per_pixel
+   cmp #8
+   bne @bitwise_shift
+   stz VERA_data1
+   dec SB2
+   bra @write_row
+@bitwise_shift:
+   ldy bits_per_pixel
+@shift_loop:
+   ldx #0
+   lsr scratch_tile,x
+@roll_loop:
+   php
+   inx
+   cpx SB1
+   beq @next_bit
+   plp
+   ror scratch_tile,x
+   bra @roll_loop
+@next_bit:
+   plp
+   dey
+   bne @shift_loop
+@write_row:
+   ldx #0
+@write_loop:
+   lda scratch_tile,x
+   sta VERA_data1
+   inx
+   cpx SB2
+   bne @write_loop
+@next_row:
+   ply
+   ldx #0
+   dey
+   bne @read_row
+   jmp load_tile ; tail-optimization
+
 
 shift_down:
    
