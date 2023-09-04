@@ -204,7 +204,7 @@ load_tile:
    ; load tile viz address for port 1
    lda #1
    sta VERA_ctrl
-   VERA_SET_ADDR TILE_VIZ,2
+   VERA_SET_ADDR TILE_VIZ,1
    lda tile_width
    sta SB1
    lda tile_height
@@ -220,6 +220,8 @@ load_tile:
    beq @split_2
    ldy #7
 @single_bit_loop:
+   lda #$A0
+   sta VERA_data1
    txa
    asl
    tax
@@ -239,6 +241,8 @@ load_tile:
 @split_2:
    ldy #3
 @two_bit_loop:
+   lda #$A0
+   sta VERA_data1
    txa
    asl
    rol
@@ -259,6 +263,8 @@ load_tile:
    tax
    bra @last_pixel
 @split_4:
+   lda #$A0
+   sta VERA_data1
    txa
    lsr
    lsr
@@ -272,15 +278,22 @@ load_tile:
    jsr apply_offset
    tax
 @last_pixel:
+   lda #$A0
+   sta VERA_data1
    stx VERA_data1
    dec SB1
    bne @render_tile
+   lda VERA_data1
    lda VERA_data1 ; skip over line
    lda tile_viz_width
    sec
    sbc tile_width
    dec
 @blackout_width:
+   pha
+   lda #$A0
+   sta VERA_data1
+   pla
    stz VERA_data1
    dec
    bne @blackout_width
@@ -305,6 +318,10 @@ load_tile:
    sta VERA_addr_low
    lda tile_viz_width
 @blackout_full_width:
+   pha
+   lda #$A0
+   sta VERA_data1
+   pla
    stz VERA_data1
    dec
    bne @blackout_full_width
@@ -641,6 +658,8 @@ scale_sprite_to_4bpp:
    rts
 
 tileviz_reset:
+   lda menu_visible
+   bne @return
    phx
    stz VERA_ctrl
    lda #$21
@@ -667,6 +686,7 @@ tileviz_reset:
    cpx #7
    bne @next_loop
    plx
+@return:   
    rts
 
 tile_navigate:

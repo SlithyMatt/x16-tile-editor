@@ -66,3 +66,5 @@ rgb_gui_on: .res 1
 
 dropper: .res 1
 clipboard: .res 4096
+
+menu_visible: .res 1

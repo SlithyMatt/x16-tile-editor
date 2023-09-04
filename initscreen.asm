@@ -28,6 +28,7 @@ initscreen:
 .endrepeat
 .byte "| About |"
 
+menu_bottom:
 ;  row 2 (bottom border)
 .byte $6d
 .repeat 2
@@ -489,10 +490,10 @@ arrowheads:
 .byte %00000001
 
 TEXT_START = $1B000
-PAL_VIZ = TEXT_START+$503
+PAL_VIZ = TEXT_START+$502
 FG_COLOR_BOX = TEXT_START+$1707
 BG_COLOR_BOX = TEXT_START+$1719
-TILE_VIZ = TEXT_START+$529
+TILE_VIZ = TEXT_START+$528
 
 load_initscreen:
    lda #$0E  ; go to lowercase
@@ -551,7 +552,7 @@ load_initscreen:
    dex
    bne @loop
    ; load current palette
-   VERA_SET_ADDR PAL_VIZ,2
+   VERA_SET_ADDR (PAL_VIZ+1),2
    ldx #0
    ldy #0
 @pal_loop:
@@ -561,7 +562,7 @@ load_initscreen:
    bne @next_color
    ldy #0
    inc VERA_addr_high
-   lda #<PAL_VIZ
+   lda #<(PAL_VIZ+1)
    sta VERA_addr_low
 @next_color:
    inx

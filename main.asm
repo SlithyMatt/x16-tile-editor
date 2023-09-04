@@ -15,6 +15,7 @@
 .include "tools.asm"
 .include "print.asm"
 .include "files.asm"
+.include "menus.asm"
 
 TILE_MAP = $1A800
 
@@ -86,21 +87,23 @@ init_globals:
    sta tile_viz_height
    jsr reset_tile_count
    stz button_latch
+   stz menu_visible
    rts
 
 left_click:
-   ; TODO: check menu bar
+   cpy #1
+   bne @check_main
+   jmp menu_click
+@check_main:
    cpy #3
    bne @check_tile_viz
-   jsr tile_navigate
-   bra @return
+   jmp tile_navigate ; tail-optimization
 @check_tile_viz:
    cpy #TILE_VIZ_Y
    bmi @return
    cpx #TILE_VIZ_X
    bmi @check_palette
-   jsr tileviz_leftclick
-   bra @return
+   jmp tileviz_leftclick ; tail-optimization
 @check_palette:
    cpy #21
    bpl @check_tools
@@ -108,8 +111,7 @@ left_click:
    bmi @return
    cpx #17
    bpl @return
-   jsr palette_leftclick
-   bra @return
+   jmp palette_leftclick ; tail-optimization
 @check_tools:
    jsr tools_click
 @return:
