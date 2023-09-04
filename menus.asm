@@ -2,6 +2,8 @@ FILE_X = 1
 VIEW_X = 11
 OPTIONS_X = 21
 ABOUT_X = 72
+ABOUT_PANEL_X = 24
+ABOUT_PANEL_Y = 12
 
 FILE_MENU_VISIBLE = 1
 VIEW_MENU_VISIBLE = 2
@@ -197,7 +199,53 @@ show_options_menu:
    bne @loop
    rts
 
+about_panel_block:
+   .byte $70
+   .repeat 47
+      .byte $40
+   .endrepeat
+   .byte $6e
+
+   .byte "| X16 Tile Editor - Version 0.0.4a              |"
+   .byte "| by Matt Heffernan                             |"
+   .byte "| https://github.com/slithymatt/x16-tile-editor |"
+
+   .byte $6d
+   .repeat 47
+      .byte $40
+   .endrepeat
+   .byte $7d
+
 show_about_panel:
+   inc button_latch
+   lda #ABOUT_PANEL_VISIBLE
+   sta menu_visible
+   ldx #ABOUT_PANEL_X
+   ldy #ABOUT_PANEL_Y
+   jsr print_set_vera_addr
+   lda #$11
+   sta VERA_addr_bank ; set stride to 1
+   lda #49
+   sta SB1
+   ldx #0
+   ldy #5
+@loop:
+   lda about_panel_block,x
+   sta VERA_data0
+   lda #1
+   sta VERA_data0
+   inx
+   cpx SB1
+   bne @loop
+   txa
+   clc
+   adc #49
+   sta SB1
+   inc VERA_addr_high
+   lda #(ABOUT_PANEL_X*2)
+   sta VERA_addr_low
+   dey
+   bne @loop
    rts
 
 reset_menu:
