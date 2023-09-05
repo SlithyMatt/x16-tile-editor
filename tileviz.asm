@@ -981,6 +981,8 @@ tileviz_set_pixel: ; A = 8-bit color index, X = clicked tile X
    jmp load_tile ; tail-optimization
 
 tileviz_leftclick:
+   lda button_latch
+   bne @return
    jsr check_tileviz_xy
    bpl @return
    lda dropper

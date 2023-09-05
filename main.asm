@@ -91,8 +91,11 @@ init_globals:
    rts
 
 left_click:
+   lda menu_visible
+   bne @do_menu
    cpy #1
    bne @check_main
+@do_menu:
    jmp menu_click
 @check_main:
    cpy #3
@@ -118,6 +121,8 @@ left_click:
    rts
 
 right_click:
+   lda menu_visible
+   bne @return
    cpy #TILE_VIZ_Y
    bmi @return
    cpx #TILE_VIZ_X

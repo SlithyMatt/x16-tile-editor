@@ -16,7 +16,7 @@ menu_click:
    inc button_latch
    lda menu_visible
    beq @check_file
-   jmp reset_menu
+   jmp menu_visible_click ; tail-optimization
 @check_file:
    cpx #FILE_X
    bmi @return
@@ -44,6 +44,27 @@ menu_click:
 @return:
    rts
 
+menu_visible_click:
+   cpy #3
+   bmi @reset
+   lda menu_visible
+   cmp #ABOUT_PANEL_VISIBLE
+   beq @reset ; always reset on any click when "about" panel is visible
+   cmp #FILE_MENU_VISIBLE
+   bne @check_view
+   jmp file_menu_click ; tail-optimization
+@check_view:
+   cmp #VIEW_MENU_VISIBLE
+   bne @check_options
+   jmp view_menu_click ; tail-optimization
+@check_options:
+   cmp #OPTIONS_MENU_VISIBLE
+   bne @reset ; shouldn't happen, but reset just in case
+   jmp options_menu_click ; tail-optimization
+@reset:
+   jmp reset_menu ; tail-optimization
+
+
 file_menu_block:
    .byte $6b
    .repeat 9
@@ -68,7 +89,6 @@ file_menu_block:
    .byte $7D
 
 show_file_menu:
-   inc button_latch
    lda #FILE_MENU_VISIBLE
    sta menu_visible
    ldx #(FILE_X-1)
@@ -94,6 +114,17 @@ show_file_menu:
    bne @loop
    rts
 
+file_menu_click:
+   cpy #8
+   bpl @reset
+   cpx #FILE_X
+   bmi @reset
+   cpx #(FILE_X+14)
+   bpl @reset
+   ; TODO selection
+@reset:
+   jmp reset_menu ; tail-optimization
+
 view_menu_block:
    .byte $6b
    .repeat 9
@@ -115,7 +146,6 @@ view_menu_block:
    .byte $7D 
 
 show_view_menu:
-   inc button_latch
    lda #VIEW_MENU_VISIBLE
    sta menu_visible
    ldx #(VIEW_X-1)
@@ -146,6 +176,18 @@ show_view_menu:
    bne @loop
    rts
 
+view_menu_click:
+   cpy #5
+   bpl @reset
+   cpx #VIEW_X
+   bmi @reset
+   cpx #(VIEW_X+19)
+   bpl @reset
+   ; TODO selection
+@reset:
+   jmp reset_menu ; tail-optimization
+
+
 options_menu_block:
    .byte $6b
    .repeat 9
@@ -168,7 +210,6 @@ options_menu_block:
    .byte $7D 
 
 show_options_menu:
-   inc button_latch
    lda #OPTIONS_MENU_VISIBLE
    sta menu_visible
    ldx #(OPTIONS_X-1)
@@ -199,6 +240,18 @@ show_options_menu:
    bne @loop
    rts
 
+options_menu_click:
+   cpy #5
+   bpl @reset
+   cpx #OPTIONS_X
+   bmi @reset
+   cpx #(OPTIONS_X+24)
+   bpl @reset
+   ; TODO selection
+@reset:
+   jmp reset_menu ; tail-optimization
+
+
 about_panel_block:
    .byte $70
    .repeat 47
@@ -217,7 +270,6 @@ about_panel_block:
    .byte $7d
 
 show_about_panel:
-   inc button_latch
    lda #ABOUT_PANEL_VISIBLE
    sta menu_visible
    ldx #ABOUT_PANEL_X
@@ -249,7 +301,6 @@ show_about_panel:
    rts
 
 reset_menu:
-   inc button_latch
    ldx #0
    ldy #2
    jsr print_set_vera_addr
