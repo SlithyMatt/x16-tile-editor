@@ -77,9 +77,9 @@ init_palette:
    stz rgb_gui_on
    jsr load_pal_file
    lda file_error
-   bne @load_default
+   bne load_default_palette
    rts
-@load_default:
+load_default_palette:
    stz file_error
    ; TODO stop LED flashing
    stz VERA_ctrl

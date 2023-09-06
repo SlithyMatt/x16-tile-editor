@@ -121,7 +121,32 @@ file_menu_click:
    bmi @reset
    cpx #(FILE_X+14)
    bpl @reset
-   ; TODO selection
+   cpy #3
+   bne @check_open_palette
+   jsr reset_menu
+   jmp chooser_open_tiles ; tail-optimization
+@check_open_palette:
+   cpy #4
+   bne @check_save
+   jsr reset_menu
+   jmp chooser_open_pal ; tail-optimization
+@check_save:
+   cpy #5
+   bne @check_save_as
+   jsr save_tile_file
+   ; TODO save metadata
+   jsr save_pal_file 
+   bra @reset
+@check_save_as:
+   cpy #6
+   bne @check_exit
+   jsr reset_menu
+   jmp chooser_save_as ; tail-optimization
+@check_exit:
+   cpy #7
+   bne @reset ; should never happen, but reset just in case
+   inc exit_req
+   rts
 @reset:
    jmp reset_menu ; tail-optimization
 

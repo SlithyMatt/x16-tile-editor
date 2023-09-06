@@ -68,3 +68,5 @@ dropper: .res 1
 clipboard: .res 4096
 
 menu_visible: .res 1
+
+exit_req: .res 1

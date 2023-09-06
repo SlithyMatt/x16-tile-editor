@@ -16,6 +16,7 @@
 .include "print.asm"
 .include "files.asm"
 .include "menus.asm"
+.include "chooser.asm"
 
 TILE_MAP = $1A800
 
@@ -56,6 +57,8 @@ start:
    beq @sleepytime
    jsr right_click
 @sleepytime:
+   lda exit_req
+   bne @exit
    wai
    ; check keyboard buffer
    jsr GETIN
@@ -66,7 +69,22 @@ start:
    jsr save_tile_file
    jsr save_pal_file
    bra @loop
-   rts
+@exit:
+   jsr load_default_palette
+   lda #2 ; return to upper case
+   jsr SCREEN_SET_CHARSET
+   lda #0
+   clc
+   jsr SCREEN_MODE 
+   lda VERA_L1_config
+   and #$F7 ; clear T256
+   sta VERA_L1_config
+   lda #0
+   jsr MOUSE_CONFIG
+   stz VERA_ctrl
+   VERA_SET_ADDR (PREVIEW_SPRITE_ATTR+6),0
+   stz VERA_data0
+   rts ; return to BASIC
 
 init_globals:
    stz sprite_mode
@@ -88,6 +106,7 @@ init_globals:
    jsr reset_tile_count
    stz button_latch
    stz menu_visible
+   stz exit_req
    rts
 
 left_click:
