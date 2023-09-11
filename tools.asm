@@ -223,6 +223,23 @@ tools_reset:
    iny
    cpy #(end_tool_string_table-tool_string_table)
    bne @loop
+   ; reset shift buttons
+   ldx #SHIFT_UP_X
+   ldy #SHIFT_UP_Y
+   lda #$F1
+   jsr print_char
+   ldx #SHIFT_LEFT_X
+   ldy #SHIFT_LEFT_Y
+   lda #$F3
+   jsr print_char
+   ldx #SHIFT_RIGHT_X
+   ldy #SHIFT_RIGHT_Y
+   lda #$F0
+   jsr print_char
+   ldx #SHIFT_DOWN_X
+   ldy #SHIFT_DOWN_Y
+   lda #$F2
+   jsr print_char
    ply
    plx
    rts
@@ -401,6 +418,10 @@ get_row_size: ; output: A = bytes per row
 
 shift_up:
    inc button_latch
+   ldx #SHIFT_UP_X
+   ldy #SHIFT_UP_Y
+   lda #$F6
+   jsr print_char
    jsr get_row_size
    sta SB2
 @setup_addr:
@@ -456,6 +477,10 @@ shift_up:
 
 shift_left:
    inc button_latch
+   ldx #SHIFT_LEFT_X
+   ldy #SHIFT_LEFT_Y
+   lda #$F8
+   jsr print_char
    jsr get_row_size
    sta SB1
    stz VERA_ctrl
@@ -527,6 +552,10 @@ shift_left:
 
 shift_right:
    inc button_latch
+   ldx #SHIFT_RIGHT_X
+   ldy #SHIFT_RIGHT_Y
+   lda #$F5
+   jsr print_char
    jsr get_row_size
    sta SB1
    stz VERA_ctrl
@@ -597,6 +626,10 @@ shift_right:
 
 shift_down:
    inc button_latch
+   ldx #SHIFT_DOWN_X
+   ldy #SHIFT_DOWN_Y
+   lda #$F7
+   jsr print_char
    jsr get_row_size
    pha
    jsr get_tile_size

@@ -489,6 +489,16 @@ arrowheads:
 .byte %00000111
 .byte %00000001
 
+; also, a little folder icon
+.byte %11110000
+.byte %10010000
+.byte %11111111
+.byte %10000001
+.byte %10000001
+.byte %10000001
+.byte %11111111
+.byte %00000000
+
 TEXT_START = $1B000
 PAL_VIZ = TEXT_START+$502
 FG_COLOR_BOX = TEXT_START+$1707
@@ -513,7 +523,7 @@ load_initscreen:
    lda (ZP_PTR_1),y
    sta VERA_data0
    iny
-   cpy #32
+   cpy #40
    bne @ah_loop1
    ldy #0
 @ah_loop2:
@@ -521,7 +531,7 @@ load_initscreen:
    eor #$FF ; reverse video
    sta VERA_data0
    iny
-   cpy #32
+   cpy #40
    bne @ah_loop2
    ; load into layer 1 tile map
    VERA_SET_ADDR TEXT_START,1

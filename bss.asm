@@ -70,3 +70,14 @@ clipboard: .res 4096
 menu_visible: .res 1
 
 exit_req: .res 1
+
+file_list: .res (28*9)
+file_list_len: .res 1
+dir_list: .res (26*9)
+dir_list_len: .res 1
+dir_skipped: .res 1
+dir_read_done: .res 1
+
+filename_stage: .res 29
+chooser_scroll: .res 1
+

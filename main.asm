@@ -107,6 +107,7 @@ init_globals:
    stz button_latch
    stz menu_visible
    stz exit_req
+   stz filename_stage+28
    rts
 
 left_click:
