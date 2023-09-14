@@ -1,5 +1,6 @@
 CHOOSER_X = 23
 CHOOSER_Y = 7
+DIR_STAGING = $8000
 
 chooser_block: ; 34x15
    .byte $70
@@ -122,13 +123,16 @@ scroll_chooser: ; input: A = scroll position
    ldx #<dos_directory
    ldy #>dos_directory
    jsr SETNAM
-   lda #15
+   lda #1
    ldx #8
-   ldy #15
+   ldy #0
    jsr SETLFS
-   jsr OPEN
-   ldx #15
-   jsr CHKIN
+   lda #0
+   ldx #<DIR_STAGING
+   stx ZP_PTR_1
+   ldy #>DIR_STAGING
+   sty ZP_PTR_1+1
+   jsr LOAD
    jsr flush_line
    stz SB1
 @read_loop:
@@ -155,25 +159,26 @@ scroll_chooser: ; input: A = scroll position
    stz dir_list+2
    inc dir_list_len
 @get_dirs:
-   jsr CLOSE
-   jsr CLRCHN
    stz dir_read_done
    lda #(end_dos_directory_dirs_only-dos_directory_dirs_only)
    ldx #<dos_directory_dirs_only
    ldy #>dos_directory_dirs_only
    jsr SETNAM
-   lda #15
+   lda #1
    ldx #8
-   ldy #15
+   ldy #0
    jsr SETLFS
-   jsr OPEN
-   ldx #15
-   jsr CHKIN
+   lda #0
+   ldx #<DIR_STAGING
+   stx ZP_PTR_1
+   ldy #>DIR_STAGING
+   sty ZP_PTR_1+1
+   jsr LOAD
    jsr flush_line
    lda #<dir_list
-   sta ZP_PTR_1
+   sta ZP_PTR_2
    lda #>dir_list
-   sta ZP_PTR_1+1   
+   sta ZP_PTR_2+1   
 @dir_read_loop:
    jsr read_dir_listing_line
    lda dir_read_done
@@ -187,7 +192,7 @@ scroll_chooser: ; input: A = scroll position
    ldy #0
 @dir_copy_loop:
    lda filename_stage,y
-   sta (ZP_PTR_1),y
+   sta (ZP_PTR_2),y
    beq @next_dir
    iny
    cpy #26
@@ -198,28 +203,28 @@ scroll_chooser: ; input: A = scroll position
    lda dir_list_len
    cmp #9
    bpl @flush_dir
-   lda ZP_PTR_1
+   lda ZP_PTR_2
    clc
    adc #26
-   sta ZP_PTR_1
-   lda ZP_PTR_1+1
+   sta ZP_PTR_2
+   lda ZP_PTR_2+1
    adc #0
-   sta ZP_PTR_1+1
+   sta ZP_PTR_2+1
    bra @start_dir_copy
 @flush_dir:
    jsr read_dir_listing_line
    lda dir_read_done
    beq @flush_dir
    lda #<filename_stage
-   sta ZP_PTR_2
+   sta ZP_PTR_3
    lda #>filename_stage
-   sta ZP_PTR_2+1
+   sta ZP_PTR_3+1
    stz filename_stage+26
    ldx #0
    lda #<dir_list
-   sta ZP_PTR_1
+   sta ZP_PTR_2
    lda #>dir_list
-   sta ZP_PTR_1+1
+   sta ZP_PTR_2+1
    cpx dir_list_len
    beq @check_dir_count
 @dir_loop:
@@ -229,17 +234,17 @@ scroll_chooser: ; input: A = scroll position
    sta filename_stage+1   
    ldy #0
 @dir_stage_loop:
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    sta filename_stage+2,y
    beq @print_dir
    iny
    cpy #25
    bne @dir_stage_loop
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    sta filename_stage+25
    beq @print_dir
    iny
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    beq @print_dir
    lda #$2A ; "*"
    sta filename_stage+25
@@ -250,15 +255,13 @@ scroll_chooser: ; input: A = scroll position
    adc #(CHOOSER_Y+4)
    tay
    ldx #(CHOOSER_X+2)
-   lda #ZP_PTR_2
+   lda #ZP_PTR_3
    jsr print_string
    plx
    inx
    cpx dir_list_len
    bne @dir_loop
 @check_dir_count:
-   jsr CLOSE
-   jsr CLRCHN
    lda dir_list_len
    cmp #9
    bne @load_file_listing
@@ -269,18 +272,21 @@ scroll_chooser: ; input: A = scroll position
    ldx #<dos_directory_prgs_only
    ldy #>dos_directory_prgs_only
    jsr SETNAM
-   lda #15
+   lda #LOGICAL_FILE
    ldx #8
-   ldy #15
+   ldy #0
    jsr SETLFS
-   jsr OPEN
-   ldx #15
-   jsr CHKIN
+   lda #0
+   ldx #<DIR_STAGING
+   stx ZP_PTR_1
+   ldy #>DIR_STAGING
+   sty ZP_PTR_1+1
+   jsr LOAD
    jsr flush_line
    lda #<file_list
-   sta ZP_PTR_1
+   sta ZP_PTR_2
    lda #>file_list
-   sta ZP_PTR_1+1   
+   sta ZP_PTR_2+1   
 @file_read_loop:
    jsr read_dir_listing_line
    lda dir_read_done
@@ -294,7 +300,7 @@ scroll_chooser: ; input: A = scroll position
    ldy #0
 @file_copy_loop:
    lda filename_stage,y
-   sta (ZP_PTR_1),y
+   sta (ZP_PTR_2),y
    beq @next_file
    iny
    cpy #28
@@ -307,44 +313,44 @@ scroll_chooser: ; input: A = scroll position
    adc dir_list_len
    cmp #9
    bpl @flush_file
-   lda ZP_PTR_1
+   lda ZP_PTR_2
    clc
    adc #28
-   sta ZP_PTR_1
-   lda ZP_PTR_1+1
+   sta ZP_PTR_2
+   lda ZP_PTR_2+1
    adc #0
-   sta ZP_PTR_1+1
+   sta ZP_PTR_2+1
    bra @start_file_copy
 @flush_file:
    jsr read_dir_listing_line
    lda dir_read_done
    beq @flush_file
    lda #<filename_stage
-   sta ZP_PTR_2
+   sta ZP_PTR_3
    lda #>filename_stage
-   sta ZP_PTR_2+1
+   sta ZP_PTR_3+1
    stz filename_stage+28
    ldx #0
    lda #<file_list
-   sta ZP_PTR_1
+   sta ZP_PTR_2
    lda #>file_list
-   sta ZP_PTR_1+1
+   sta ZP_PTR_2+1
    cpx dir_list_len
    beq @done
 @file_loop:
    ldy #0
 @file_stage_loop:
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    sta filename_stage,y
    beq @print_file
    iny
    cpy #27
    bne @file_stage_loop
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    sta filename_stage+27
    beq @print_file
    iny
-   lda (ZP_PTR_1),y
+   lda (ZP_PTR_2),y
    beq @print_file
    lda #$2A ; "*"
    sta filename_stage+27
@@ -355,39 +361,44 @@ scroll_chooser: ; input: A = scroll position
    adc #(CHOOSER_Y+4)
    tay
    ldx #(CHOOSER_X+2)
-   lda #ZP_PTR_2
+   lda #ZP_PTR_3
    jsr print_string
    plx
    inx
    cpx file_list_len
    bne @file_loop
 @done:
-   jsr CLOSE
-   jsr CLRCHN
    ; TODO change scroll nub
    rts
 
 
 
 flush_line:
-   jsr CHRIN
+   phy
+   ldy #0
+@loop:
+   lda (ZP_PTR_1),y
    cmp #$0D ; check for return
-   bne flush_line
+   bne @loop
+   tya
+   clc
+   adc ZP_PTR_1
+   sta ZP_PTR_1
+   lda ZP_PTR_1+1
+   adc #0
+   sta ZP_PTR_1+1
+   ply
    rts
 
 read_dir_listing_line:
-   ldx #6
-@lead_in:
-   jsr CHRIN
-   dex
-   bne @lead_in
-   cmp #$22
-   bne @not_file
+   ldx #0
+   ldy #6
 @read_char:
-   jsr CHRIN
+   lda (ZP_PTR_1),y
    cmp #$22
    beq @end_filename
    sta filename_stage,x
+   iny
    inx
    cpx #27
    bne @read_char
