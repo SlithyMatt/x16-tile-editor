@@ -182,7 +182,7 @@ scroll_chooser: ; input: A = scroll position
 @dir_read_loop:
    jsr read_dir_listing_line
    lda dir_read_done
-   beq @flush_dir
+   bne @print_dirs
    lda dir_skipped
    cmp chooser_scroll
    beq @start_dir_copy
@@ -202,7 +202,7 @@ scroll_chooser: ; input: A = scroll position
    inc dir_list_len
    lda dir_list_len
    cmp #9
-   bpl @flush_dir
+   bpl @print_dirs
    lda ZP_PTR_2
    clc
    adc #26
@@ -210,11 +210,8 @@ scroll_chooser: ; input: A = scroll position
    lda ZP_PTR_2+1
    adc #0
    sta ZP_PTR_2+1
-   bra @start_dir_copy
-@flush_dir:
-   jsr read_dir_listing_line
-   lda dir_read_done
-   beq @flush_dir
+   bra @dir_read_loop
+@print_dirs:
    lda #<filename_stage
    sta ZP_PTR_3
    lda #>filename_stage
@@ -235,6 +232,7 @@ scroll_chooser: ; input: A = scroll position
    ldy #0
 @dir_stage_loop:
    lda (ZP_PTR_2),y
+   jsr ascii_to_screen_code
    sta filename_stage+2,y
    beq @print_dir
    iny
@@ -257,6 +255,13 @@ scroll_chooser: ; input: A = scroll position
    ldx #(CHOOSER_X+2)
    lda #ZP_PTR_3
    jsr print_string
+   lda ZP_PTR_2
+   clc
+   adc #26
+   sta ZP_PTR_2
+   lda ZP_PTR_2+1
+   adc #0
+   sta ZP_PTR_2
    plx
    inx
    cpx dir_list_len
@@ -290,7 +295,7 @@ scroll_chooser: ; input: A = scroll position
 @file_read_loop:
    jsr read_dir_listing_line
    lda dir_read_done
-   beq @flush_file
+   bne @print_files
    lda dir_skipped
    cmp chooser_scroll
    beq @start_file_copy
@@ -312,7 +317,7 @@ scroll_chooser: ; input: A = scroll position
    clc
    adc dir_list_len
    cmp #9
-   bpl @flush_file
+   bpl @print_files
    lda ZP_PTR_2
    clc
    adc #28
@@ -321,10 +326,7 @@ scroll_chooser: ; input: A = scroll position
    adc #0
    sta ZP_PTR_2+1
    bra @start_file_copy
-@flush_file:
-   jsr read_dir_listing_line
-   lda dir_read_done
-   beq @flush_file
+@print_files:
    lda #<filename_stage
    sta ZP_PTR_3
    lda #>filename_stage
@@ -335,12 +337,13 @@ scroll_chooser: ; input: A = scroll position
    sta ZP_PTR_2
    lda #>file_list
    sta ZP_PTR_2+1
-   cpx dir_list_len
+   cpx file_list_len
    beq @done
 @file_loop:
    ldy #0
 @file_stage_loop:
    lda (ZP_PTR_2),y
+   jsr ascii_to_screen_code
    sta filename_stage,y
    beq @print_file
    iny
@@ -358,11 +361,19 @@ scroll_chooser: ; input: A = scroll position
    phx
    txa
    clc
+   adc dir_list_len
    adc #(CHOOSER_Y+4)
    tay
    ldx #(CHOOSER_X+2)
    lda #ZP_PTR_3
    jsr print_string
+   lda ZP_PTR_2
+   clc
+   adc #28
+   sta ZP_PTR_2
+   lda ZP_PTR_2+1
+   adc #0
+   sta ZP_PTR_2
    plx
    inx
    cpx file_list_len
@@ -375,10 +386,11 @@ scroll_chooser: ; input: A = scroll position
 
 flush_line:
    phy
-   ldy #0
+   ldy #4 ; skip past line header
 @loop:
    lda (ZP_PTR_1),y
-   cmp #$0D ; check for return
+   iny
+   cmp #0 ; check for null
    bne @loop
    tya
    clc
@@ -393,6 +405,10 @@ flush_line:
 read_dir_listing_line:
    ldx #0
    ldy #6
+   lda (ZP_PTR_1),y
+   cmp #$22
+   bne @not_file
+   iny
 @read_char:
    lda (ZP_PTR_1),y
    cmp #$22
@@ -410,7 +426,7 @@ read_dir_listing_line:
 @flush:
    jmp flush_line ; tail-optimization
 
-
+   
 
 chooser_open_pal:
    rts

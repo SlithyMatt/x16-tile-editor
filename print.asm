@@ -238,3 +238,26 @@ print_char: ; A = screen code to print
    sta VERA_data0
    rts
    
+ascii_to_screen_code:
+   cmp #$20
+   bmi @space
+   cmp #$40
+   bmi @return ; no change
+   cmp #$60
+   bmi @uppercase
+   cmp #$80
+   bmi @lowercase
+   cmp #$A0
+   bpl @return ; no change
+@space: ; make control characters spaces
+   lda #$20
+   bra @return
+@lowercase:
+   sec
+   sbc #$40
+   bra @return
+@uppercase:
+   sec
+   sbc #$20
+@return:
+   rts
