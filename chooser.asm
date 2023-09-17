@@ -476,8 +476,18 @@ chooser_open_pal:
    sta chooser_action
    rts
 
+save_string: .asciiz " Save"
+
 chooser_save_as:
-   jsr show_chooser  
+   jsr show_chooser
+   ldx #CHOOSER_ACTION_X
+   ldy #CHOOSER_ACTION_Y
+   lda #<save_string
+   sta ZP_PTR_1
+   lda #>save_string
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   jsr print_string
    lda #0
    sta chooser_scroll
    jsr scroll_chooser
