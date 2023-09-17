@@ -80,4 +80,5 @@ dir_read_done: .res 1
 
 filename_stage: .res 29
 chooser_scroll: .res 1
-
+chooser_visible: .res 1
+chooser_action: .res 1

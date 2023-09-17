@@ -2,6 +2,16 @@ CHOOSER_X = 23
 CHOOSER_Y = 7
 DIR_STAGING = $8000
 
+CHOOSER_CHOICE_X = 38
+CHOOSER_CHOICE_Y = 8
+CHOOSER_SCROLL_X = 55
+CHOOSER_SCROLL_UP_Y = 10
+CHOOSER_SCROLL_DOWN_Y = 18
+CHOOSER_CANCEL_X = 24
+CHOOSER_CANCEL_Y = 20
+CHOOSER_ACTION_X = 50
+CHOOSER_ACTION_Y = CHOOSER_CANCEL_Y
+
 chooser_block: ; 34x15
    .byte $70
    .repeat 32
@@ -17,7 +27,7 @@ chooser_block: ; 34x15
    .endrepeat
    .byte $72,$40,$73
 
-   .byte "| ",$F4," ..                         |",$F1,"|"
+   .byte "|                              |",$F1,"|"
 
    .repeat 3
       .byte "|                              |",$66,"|"
@@ -59,12 +69,17 @@ chooser_block: ; 34x15
    .endrepeat
    .byte $7d
 
+CHOOSER_ACTION_OPEN_TILES = 0
+CHOOSER_ACTION_OPEN_PAL = 1
+CHOOSER_ACTION_SAVE = 2
+
 chooser_open_tiles:
    jsr show_chooser
    lda #0
    sta chooser_scroll
    jsr scroll_chooser
-   ; TODO set state
+   lda #CHOOSER_ACTION_OPEN_TILES
+   sta chooser_action
    rts
 
 dos_directory:
@@ -75,6 +90,7 @@ dos_directory_prgs_only: .byte "$:*=P"
 end_dos_directory_prgs_only:
 
 show_chooser:
+   inc chooser_visible
    ldx #CHOOSER_X
    ldy #CHOOSER_Y
    jsr print_set_vera_addr
@@ -175,17 +191,27 @@ scroll_chooser: ; input: A = scroll position
    sty ZP_PTR_1+1
    jsr LOAD
    jsr flush_line
-   lda #<dir_list
+   clc
+   lda dir_list_len
+   beq @no_dotdot
+   lda #26
+   bra @init_dir_list
+@no_dotdot:
+   lda #0
+@init_dir_list:
+   adc #<dir_list
    sta ZP_PTR_2
    lda #>dir_list
+   adc #0
    sta ZP_PTR_2+1   
 @dir_read_loop:
    jsr read_dir_listing_line
    lda dir_read_done
    bne @print_dirs
    lda dir_skipped
+   inc
    cmp chooser_scroll
-   beq @start_dir_copy
+   bpl @start_dir_copy
    inc dir_skipped
    bra @dir_read_loop
 @start_dir_copy:
@@ -216,14 +242,14 @@ scroll_chooser: ; input: A = scroll position
    sta ZP_PTR_3
    lda #>filename_stage
    sta ZP_PTR_3+1
-   stz filename_stage+26
    ldx #0
+   cpx dir_list_len
+   beq @load_file_listing
+   stz filename_stage+26
    lda #<dir_list
    sta ZP_PTR_2
    lda #>dir_list
-   sta ZP_PTR_2+1
-   cpx dir_list_len
-   beq @check_dir_count
+   sta ZP_PTR_2+1   
 @dir_loop:
    lda #$F4 ; file folder icon
    sta filename_stage
@@ -234,7 +260,12 @@ scroll_chooser: ; input: A = scroll position
    lda (ZP_PTR_2),y
    jsr ascii_to_screen_code
    sta filename_stage+2,y
-   beq @print_dir
+   cmp #$80 ; converted NULL
+   bne @next_dir_char
+   lda #0
+   sta filename_stage+2,y
+   bra @print_dir
+@next_dir_char:
    iny
    cpy #25
    bne @dir_stage_loop
@@ -250,7 +281,7 @@ scroll_chooser: ; input: A = scroll position
    phx
    txa
    clc
-   adc #(CHOOSER_Y+4)
+   adc #(CHOOSER_Y+3)
    tay
    ldx #(CHOOSER_X+2)
    lda #ZP_PTR_3
@@ -261,7 +292,7 @@ scroll_chooser: ; input: A = scroll position
    sta ZP_PTR_2
    lda ZP_PTR_2+1
    adc #0
-   sta ZP_PTR_2
+   sta ZP_PTR_2+1
    plx
    inx
    cpx dir_list_len
@@ -325,7 +356,7 @@ scroll_chooser: ; input: A = scroll position
    lda ZP_PTR_2+1
    adc #0
    sta ZP_PTR_2+1
-   bra @start_file_copy
+   bra @file_read_loop
 @print_files:
    lda #<filename_stage
    sta ZP_PTR_3
@@ -345,7 +376,12 @@ scroll_chooser: ; input: A = scroll position
    lda (ZP_PTR_2),y
    jsr ascii_to_screen_code
    sta filename_stage,y
-   beq @print_file
+   cmp #$80 ; converted NULL
+   bne @next_file_char
+   lda #0
+   sta filename_stage,y
+   bra @print_file
+@next_file_char:
    iny
    cpy #27
    bne @file_stage_loop
@@ -362,7 +398,7 @@ scroll_chooser: ; input: A = scroll position
    txa
    clc
    adc dir_list_len
-   adc #(CHOOSER_Y+4)
+   adc #(CHOOSER_Y+3)
    tay
    ldx #(CHOOSER_X+2)
    lda #ZP_PTR_3
@@ -373,7 +409,7 @@ scroll_chooser: ; input: A = scroll position
    sta ZP_PTR_2
    lda ZP_PTR_2+1
    adc #0
-   sta ZP_PTR_2
+   sta ZP_PTR_2+1
    plx
    inx
    cpx file_list_len
@@ -404,11 +440,14 @@ flush_line:
 
 read_dir_listing_line:
    ldx #0
-   ldy #6
+   ldy #4
+@spaces:
    lda (ZP_PTR_1),y
+   iny
+   cmp #$20
+   beq @spaces
    cmp #$22
    bne @not_file
-   iny
 @read_char:
    lda (ZP_PTR_1),y
    cmp #$22
@@ -416,7 +455,7 @@ read_dir_listing_line:
    sta filename_stage,x
    iny
    inx
-   cpx #27
+   cpx #28
    bne @read_char
 @end_filename:
    stz filename_stage,x
@@ -426,10 +465,117 @@ read_dir_listing_line:
 @flush:
    jmp flush_line ; tail-optimization
 
-   
+  
 
 chooser_open_pal:
+   jsr show_chooser
+   lda #0
+   sta chooser_scroll
+   jsr scroll_chooser
+   lda #CHOOSER_ACTION_OPEN_PAL
+   sta chooser_action
    rts
 
 chooser_save_as:
+   jsr show_chooser  
+   lda #0
+   sta chooser_scroll
+   jsr scroll_chooser
+   lda #CHOOSER_ACTION_SAVE
+   sta chooser_action
+   rts
+
+
+chooser_click:
+   lda button_latch
+   bne @return
+   inc button_latch
+   cpy #CHOOSER_CHOICE_Y
+   bne @check_scroll
+   cpx #CHOOSER_CHOICE_X
+   bmi @return
+   cpx #(CHOOSER_CHOICE_X+17)
+   bpl @return
+   jmp chooser_choice_click ; tail-optimization
+@check_scroll:
+   cpy #CHOOSER_SCROLL_UP_Y
+   bmi @return
+   cpy #(CHOOSER_SCROLL_DOWN_Y+1)
+   bpl @check_buttons
+   cpx #(CHOOSER_X+1)
+   bmi @return
+   cpx #(CHOOSER_X+31)
+   bpl @check_scrollbar
+   jmp chooser_file_click ; tail-optimization
+@check_scrollbar:
+   cpx #CHOOSER_SCROLL_X
+   bne @return
+   cpy #CHOOSER_SCROLL_UP_Y
+   bne @check_scroll_down
+   jmp chooser_scroll_up ; tail-optimization
+@check_scroll_down:
+   cpy #CHOOSER_SCROLL_DOWN_Y
+   bne @return
+   jmp chooser_scroll_down ; tail-optimization
+@check_buttons:
+   cpy #CHOOSER_CANCEL_Y
+   bne @return
+   cpx #CHOOSER_CANCEL_X
+   bmi @return
+   cpx #(CHOOSER_CANCEL_X+8)
+   bpl @check_action
+   jmp chooser_cancel ; tail-optimization
+@check_action:
+   cpx #CHOOSER_ACTION_X
+   bmi @return
+   cpx #(CHOOSER_ACTION_X+6)
+   bpl @return
+   jmp chooser_action_click ; tail-optimization
+@return:
+   rts
+
+chooser_choice_click:
+   ; TODO start cursor flashing at click position
+   rts
+
+chooser_file_click:
+   ; TODO select file
+   rts
+
+chooser_clear_file_row: .asciiz "                             "
+
+chooser_scroll_up:
+   lda chooser_scroll
+   beq @return
+   dec chooser_scroll
+   jsr chooser_clear_all
+   jmp scroll_chooser ; tail-optimization
+@return:
+   rts
+
+chooser_scroll_down:
+   inc chooser_scroll
+   jsr chooser_clear_all
+   jmp scroll_chooser ; tail-optimization
+
+chooser_clear_all:
+   lda #<chooser_clear_file_row
+   sta ZP_PTR_1
+   lda #>chooser_clear_file_row
+   sta ZP_PTR_1+1
+   ldx #(CHOOSER_X+1)
+   ldy #CHOOSER_SCROLL_UP_Y
+@loop:
+   lda #ZP_PTR_1
+   jsr print_string
+   iny
+   cpy #(CHOOSER_SCROLL_DOWN_Y+1)
+   bne @loop
+   rts
+
+chooser_cancel:
+   stz chooser_visible
+   jmp load_tile ; tail-optimization
+
+chooser_action_click:
    rts

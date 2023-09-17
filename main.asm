@@ -108,15 +108,20 @@ init_globals:
    stz menu_visible
    stz exit_req
    stz filename_stage+28
+   stz chooser_visible
    rts
 
 left_click:
    lda menu_visible
    bne @do_menu
+   lda chooser_visible
+   bne @do_chooser
    cpy #1
    bne @check_main
 @do_menu:
-   jmp menu_click
+   jmp menu_click ; tail-optimization
+@do_chooser:
+   jmp chooser_click ; tail-optimization
 @check_main:
    cpy #3
    bne @check_tile_viz

@@ -219,6 +219,8 @@ _print_hex_byte: ; A = byte value to print in hex
 
 print_string: ; A = ZP address of pointer to null-terminated string (max length = 255)
                ; X,Y = coordinates to print
+   phx
+   phy
    jsr print_load_addrs
    ldy #0
 @loop:
@@ -228,6 +230,8 @@ print_string: ; A = ZP address of pointer to null-terminated string (max length 
    iny
    bra @loop
 @return:
+   ply
+   plx
    rts
 
 print_char: ; A = screen code to print
@@ -240,24 +244,19 @@ print_char: ; A = screen code to print
    
 ascii_to_screen_code:
    cmp #$20
-   bmi @space
-   cmp #$40
-   bmi @return ; no change
+   bmi @control
    cmp #$60
-   bmi @uppercase
+   bmi @return  ; no change
    cmp #$80
    bmi @lowercase
    cmp #$A0
    bpl @return ; no change
-@space: ; make control characters spaces
-   lda #$20
+@control: ; make control codes "inverted"
+   ora #$80
    bra @return
 @lowercase:
    sec
-   sbc #$40
+   sbc #$60
    bra @return
-@uppercase:
-   sec
-   sbc #$20
 @return:
    rts
