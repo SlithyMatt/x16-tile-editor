@@ -109,6 +109,12 @@ init_globals:
    stz exit_req
    stz filename_stage+28
    stz chooser_visible
+   lda #$43
+   sta dos_cd_start
+   lda #$44
+   sta dos_cd_start+1
+   lda #$3A
+   sta dos_cd_start+2
    rts
 
 left_click:

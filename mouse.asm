@@ -1,3 +1,5 @@
+DOUBLE_CLICK_THRESHOLD = 29 ; 60Hz jiffies
+
 init_mouse:
    ; reset mouse
    lda #0
@@ -10,6 +12,10 @@ init_mouse:
    rts
 
 get_mouse_xy:
+   lda double_click_countdown
+   beq @get_mouse_data
+   dec double_click_countdown
+@get_mouse_data:
    ldx #MOUSE_X
    jsr MOUSE_GET ; mouse scanned on last IRQ
    pha ; put mouse buttons on stack
@@ -33,7 +39,24 @@ get_mouse_xy:
    pla ; a = mouse button states
    rts
 
-
+check_double_click: ; Input: X/Y = mouse cursor character coordinates
+                    ; Output: Carry = 0 -> single click, set countdown, 1 -> double click, reset countdown
+   lda double_click_countdown
+   beq @set
+   cpx double_click_x
+   bne @set
+   cpy double_click_y
+   bne @set
+   stz double_click_countdown
+   sec
+   rts
+@set:
+   stx double_click_x
+   sty double_click_y
+   lda #DOUBLE_CLICK_THRESHOLD
+   sta double_click_countdown
+   clc
+   rts
 
 
 

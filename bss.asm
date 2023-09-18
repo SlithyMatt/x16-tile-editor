@@ -82,3 +82,11 @@ filename_stage: .res 29
 chooser_scroll: .res 1
 chooser_visible: .res 1
 chooser_action: .res 1
+
+double_click_countdown: .res 1
+double_click_x: .res 1
+double_click_y: .res 1
+
+dos_cd_start: .res 3
+selected_file: .res 28
+selection_is_dir: .res 1

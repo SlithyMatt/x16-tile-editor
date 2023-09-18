@@ -75,8 +75,7 @@ CHOOSER_ACTION_SAVE = 2
 
 chooser_open_tiles:
    jsr show_chooser
-   lda #0
-   sta chooser_scroll
+   stz chooser_scroll
    jsr scroll_chooser
    lda #CHOOSER_ACTION_OPEN_TILES
    sta chooser_action
@@ -469,14 +468,13 @@ read_dir_listing_line:
 
 chooser_open_pal:
    jsr show_chooser
-   lda #0
-   sta chooser_scroll
+   stz chooser_scroll
    jsr scroll_chooser
    lda #CHOOSER_ACTION_OPEN_PAL
    sta chooser_action
    rts
 
-save_string: .asciiz " Save"
+save_string: .asciiz " Save "
 
 chooser_save_as:
    jsr show_chooser
@@ -488,8 +486,7 @@ chooser_save_as:
    sta ZP_PTR_1+1
    lda #ZP_PTR_1
    jsr print_string
-   lda #0
-   sta chooser_scroll
+   stz chooser_scroll
    jsr scroll_chooser
    lda #CHOOSER_ACTION_SAVE
    sta chooser_action
@@ -545,12 +542,118 @@ chooser_click:
    rts
 
 chooser_choice_click:
+   lda chooser_action
+   cmp #CHOOSER_ACTION_SAVE
+   bne @return
    ; TODO start cursor flashing at click position
+@return:   
    rts
 
 chooser_file_click:
-   ; TODO select file
-   rts
+   jsr check_double_click
+   bcc @select
+   jmp chooser_action_click ; tail-optimization
+@select:
+   stz selection_is_dir
+   tya
+   sec
+   sbc #CHOOSER_SCROLL_UP_Y
+   cmp dir_list_len
+   bmi @select_dir
+   sbc dir_list_len
+   tax
+   lda #<file_list
+   sta ZP_PTR_1
+   lda #>file_list
+   sta ZP_PTR_1+1
+@find_filename:
+   cpx #0
+   beq @choose
+   dex
+   lda ZP_PTR_1
+   clc
+   adc #28
+   sta ZP_PTR_1
+   lda ZP_PTR_1+1
+   adc #0
+   sta ZP_PTR_1+1
+   bra @find_filename
+@select_dir:
+   inc selection_is_dir
+   tax
+   lda #<dir_list
+   sta ZP_PTR_1
+   lda #>dir_list
+   sta ZP_PTR_1+1
+@find_dir:
+   cpx #0
+   beq @choose
+   dex
+   lda ZP_PTR_1
+   clc
+   adc #26
+   sta ZP_PTR_1
+   lda ZP_PTR_1+1
+   adc #0
+   sta ZP_PTR_1+1
+   bra @find_dir
+@choose:
+   ldy #0
+@choose_loop:
+   lda (ZP_PTR_1),y
+   sta selected_file,y
+   beq @print
+   iny
+   cpy #28
+   bne @choose_loop
+@print:
+   ldy #0
+   lda #<filename_stage
+   sta ZP_PTR_2
+   lda #>filename_stage
+   sta ZP_PTR_2+1
+@print_copy_loop:
+   lda (ZP_PTR_1),y
+   jsr ascii_to_screen_code
+   cmp #$80
+   beq @pad
+   sta (ZP_PTR_2),y
+   iny
+   cpy #16
+   bne @print_copy_loop
+   lda (ZP_PTR_1),y
+   beq @pad
+   jsr ascii_to_screen_code
+   tax
+   iny
+   lda (ZP_PTR_1),y
+   bne @asterix
+   dey
+   txa
+   sta (ZP_PTR_2),y
+   iny
+   bra @add_null
+@asterix:
+   dey
+   lda #$2A
+   sta (ZP_PTR_2),y
+   iny
+   bra @add_null
+@pad:
+   cpy #17
+   beq @add_null
+   lda #$20
+   sta (ZP_PTR_2),y
+   iny
+   bra @pad
+@add_null:
+   lda #0
+   sta (ZP_PTR_2),y
+   lda #ZP_PTR_2
+   ldx #CHOOSER_CHOICE_X
+   ldy #CHOOSER_CHOICE_Y
+   jmp print_string ; tail-optimization
+
 
 chooser_clear_file_row: .asciiz "                             "
 
@@ -588,4 +691,29 @@ chooser_cancel:
    jmp load_tile ; tail-optimization
 
 chooser_action_click:
+   lda selection_is_dir
+   bne @change_dir
+   ; TODO file action
    rts
+@change_dir:
+   ldx #3
+@length_loop:
+   lda dos_cd_start,x
+   beq @do_cd
+   inx
+   bra @length_loop
+@do_cd:
+   txa
+   ldx #<dos_cd_start
+   ldy #>dos_cd_start
+   jsr SETNAM
+   lda #15
+   ldx #8
+   ldy #15
+   jsr SETLFS
+   jsr OPEN
+   lda #15
+   jsr CLOSE
+   stz chooser_scroll
+   jmp scroll_chooser ; tail-optimization
+   
