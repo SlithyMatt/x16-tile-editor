@@ -6,7 +6,7 @@ __CX16__ = 1
 .endif
 
 ; X16 addresses, values, and macros
-; Accurate for ROM release R38
+; Accurate for ROM release R44
 
 SD_DEVICE   = 8 ; also host file system on emulator if no SD image mounted
 DISK_DEVICE = SD_DEVICE ; change if to be loaded off IEC device
@@ -132,7 +132,15 @@ RAM_WIN_SIZE      = $2000
 ROM_WIN           = $C000
 
 ; Kernal Subroutines
+BSAVE                         := $FEBA
+KBDBUF_peek                   := $FEBD
+KBDBUF_get_modifiers          := $FEC0
+KBDBUF_put                    := $FEC3
+I2C_READ_BYTE                 := $FEC6
+I2C_WRITE_BYTE                := $FEC9
+MONITOR                       := $FECC
 ENTROPY_GET                   := $FECF
+KEYMAP                        := $FED2
 CONSOLE_set_paging_message    := $FED5
 CONSOLE_put_image             := $FED8
 CONSOLE_init                  := $FEDB
@@ -170,7 +178,7 @@ GRAPH_draw_image              := $FF38
 GRAPH_set_font                := $FF3B
 GRAPH_get_char_size           := $FF3E
 GRAPH_put_char                := $FF41
-MONITOR                       := $FF44
+MACPTR                        := $FF44
 ENTER_BASIC                   := $FF47
 CLOSE_ALL                     := $FF4A
 CLOCK_SET_DATE_TIME           := $FF4D
@@ -200,8 +208,10 @@ TKSA                          := $FF96
 MEMTOP                        := $FF99
 MEMBOT                        := $FF9C
 SETTMO                        := $FFA2
-IECIN                         := $FFA5
-IECOUT                        := $FFA8
+ACPTR                         := $FFA5
+IECIN                         := ACPTR ; alias
+CIOUT                         := $FFA8
+IECOUT                        := CIOUT
 UNTALK                        := $FFAB
 UNLISTEN                      := $FFAE
 LISTEN                        := $FFB1

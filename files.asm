@@ -1,5 +1,6 @@
 default_tile_filename: .asciiz "TILES.BIN"
 default_pal_filename: .asciiz "TILES.BIN.PAL"
+default_meta_filename: .asciiz "TILES.BIN.META"
 
 LOGICAL_FILE = 2
 EMPTY_FILENAME = $FF
@@ -9,9 +10,11 @@ init_filenames:
    lda #$40 ; "@"
    sta tile_filename_prefix
    sta pal_filename_prefix
+   sta meta_filename_prefix
    lda #$3A ; ":"
    sta tile_filename_prefix+1
    sta pal_filename_prefix+1
+   sta meta_filename_prefix+1
    ldx #0
 @loop1:
    lda default_tile_filename,x
@@ -26,6 +29,13 @@ init_filenames:
    inx
    cmp #0
    bne @loop2
+   ldx #0
+@loop3:
+   lda default_meta_filename,x
+   sta meta_filename,x
+   inx
+   cmp #0
+   bne @loop3
    rts
 
 set_filename: ; FILENAME_PTR = address of null-terminated filename
@@ -69,6 +79,35 @@ load_tile_file:
    jsr READST
    and #$BF ; clear EOF bit
    sta file_error
+   bne @return
+   jsr set_meta_filename
+   jsr load_metadata
+   jsr set_pal_filename
+   jmp load_pal_file ; tail-optimization
+@return:
+   rts
+
+load_metadata:
+   lda #2 ; never use header for metadata
+   sta file_sa
+   lda #<meta_filename
+   sta FILENAME_PTR
+   lda #>meta_filename
+   sta FILENAME_PTR+1
+   jsr set_filename
+   lda file_error
+   bne @return
+   lda #0
+   ldx #<metadata
+   ldy #>metadata
+   jsr LOAD
+   jsr READST
+   and #$BF ; clear EOF bit
+   sta file_error
+   jsr reset_tile_count
+   jsr print_tile_width
+   jsr print_tile_height
+   jsr print_color_depth
 @return:
    rts
 
@@ -190,8 +229,24 @@ save_tile_file:
    jsr READST
    sta file_error
    jsr CLRCHN
-   ; TODO save metadata file
-   ; TODO set palette filename
+   jsr set_meta_filename
+save_metadata:
+   lda #1
+   sta file_sa
+   lda #<meta_filename_prefix
+   sta FILENAME_PTR
+   lda #>meta_filename_prefix
+   sta FILENAME_PTR+1
+   jsr set_filename
+   lda #<metadata
+   sta ZP_PTR_1
+   lda #>metadata
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #<end_metadata
+   ldy #>end_metadata
+   jsr BSAVE
+   jsr set_pal_filename
 save_pal_file:
    lda #1
    sta file_sa
@@ -242,6 +297,58 @@ save_pal_file:
    sta file_error
    jmp CLRCHN ; tail-optimization
 
+set_meta_filename:
+   ldx #0
+@meta_filename_loop:
+   lda tile_filename,x
+   beq @meta_suffix
+   sta meta_filename,x
+   inx
+   cpx #28
+   bne @meta_filename_loop
+@meta_suffix: ; append ".META"
+   lda #$2e
+   sta meta_filename,x
+   inx
+   lda #$4d
+   sta meta_filename,x
+   inx
+   lda #$45
+   sta meta_filename,x
+   inx
+   lda #$54
+   sta meta_filename,x
+   inx
+   lda #$41
+   sta meta_filename,x
+   inx
+   stz meta_filename,x
+   rts
+
+set_pal_filename:
+   ldx #0
+@pal_filename_loop:
+   lda tile_filename,x
+   beq @pal_suffix
+   sta pal_filename,x
+   inx
+   cpx #28
+   bne @pal_filename_loop
+@pal_suffix: ; append ".PAL"
+   lda #$2e
+   sta pal_filename,x
+   inx
+   lda #$50
+   sta pal_filename,x
+   inx
+   lda #$41
+   sta pal_filename,x
+   inx
+   lda #$4c
+   sta pal_filename,x
+   inx
+   stz pal_filename,x
+   rts
 
 file_error_label: .asciiz "File Error:"
 file_error_blank: .asciiz "              "

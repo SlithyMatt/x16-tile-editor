@@ -2,13 +2,16 @@
 
 sprite_mode: .res 1  ; 0 = tiles, 1 = tile-sized sprites, 2 = big sprites
 
-tile_width: .res 2
-tile_height: .res 2
-tile_index: .res 2
+metadata:
+tile_width: .res 1
+tile_height: .res 1
+bits_per_pixel: .res 1
 tile_count: .res 2
+end_metadata:
+
+tile_index: .res 2
 fg_color: .res 1
 bg_color: .res 1
-bits_per_pixel: .res 1
 palette_offset: .res 1
 tile_viz_width: .res 1
 tile_viz_height: .res 1
@@ -94,4 +97,6 @@ dos_cd_start: .res 3
 selected_file: .res 29
 selection_is_dir: .res 1
 selection_is_file: .res 1
+
+
 
