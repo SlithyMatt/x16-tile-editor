@@ -1,5 +1,5 @@
 default_tile_filename: .asciiz "TILES.BIN"
-default_pal_filename: .asciiz "PAL.BIN"
+default_pal_filename: .asciiz "TILES.BIN.PAL"
 
 LOGICAL_FILE = 2
 EMPTY_FILENAME = $FF
@@ -189,9 +189,9 @@ save_tile_file:
    jsr CLOSE
    jsr READST
    sta file_error
-   jmp CLRCHN ; tail-optimization
-
-
+   jsr CLRCHN
+   ; TODO save metadata file
+   ; TODO set palette filename
 save_pal_file:
    lda #1
    sta file_sa

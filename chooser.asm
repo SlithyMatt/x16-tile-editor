@@ -90,6 +90,8 @@ end_dos_directory_prgs_only:
 
 show_chooser:
    inc chooser_visible
+   stz selection_is_file
+   stz selection_is_dir
    ldx #CHOOSER_X
    ldy #CHOOSER_Y
    jsr print_set_vera_addr
@@ -531,7 +533,7 @@ chooser_click:
    bmi @return
    cpx #(CHOOSER_CANCEL_X+8)
    bpl @check_action
-   jmp chooser_cancel ; tail-optimization
+   jmp close_chooser ; tail-optimization
 @check_action:
    cpx #CHOOSER_ACTION_X
    bmi @return
@@ -555,12 +557,16 @@ chooser_file_click:
    jmp chooser_action_click ; tail-optimization
 @select:
    stz selection_is_dir
+   stz selection_is_file
    tya
    sec
    sbc #CHOOSER_SCROLL_UP_Y
    cmp dir_list_len
    bmi @select_dir
    sbc dir_list_len
+   cmp file_list_len
+   bpl @return
+   inc selection_is_file
    tax
    lda #<file_list
    sta ZP_PTR_1
@@ -597,6 +603,8 @@ chooser_file_click:
    adc #0
    sta ZP_PTR_1+1
    bra @find_dir
+@return: ; placed centrally
+   rts
 @choose:
    ldy #0
 @choose_loop:
@@ -686,14 +694,45 @@ chooser_clear_all:
    bne @loop
    rts
 
-chooser_cancel:
+close_chooser:
    stz chooser_visible
    jmp load_tile ; tail-optimization
 
 chooser_action_click:
    lda selection_is_dir
    bne @change_dir
-   ; TODO file action
+   lda selection_is_file
+   beq @return ; nothing selected
+   ldx #0
+   lda chooser_action
+   cmp #CHOOSER_ACTION_OPEN_PAL
+   bne @copy_tile_fn
+@copy_pal_fn:
+   lda selected_file,x
+   sta pal_filename,x
+   inx
+   cpx #29
+   bne @copy_pal_fn
+   jsr load_pal_file
+   bra @close
+@copy_tile_fn:
+   lda selected_file,x
+   sta tile_filename,x
+   inx
+   cpx #29
+   bne @copy_tile_fn
+   lda chooser_action
+   cmp #CHOOSER_ACTION_OPEN_TILES
+   bne @check_save
+   jsr load_tile_file
+   bra @close
+@check_save:
+   cmp #CHOOSER_ACTION_SAVE
+   bne @close ; something is wrong, just close out
+   jsr save_tile_file
+@close:
+   jmp close_chooser ; tail-optimization
+@return: ; central location
    rts
 @change_dir:
    ldx #3
@@ -712,8 +751,15 @@ chooser_action_click:
    ldy #15
    jsr SETLFS
    jsr OPEN
+   ldx #15
+   jsr CHKIN
+@read_loop:
+   jsr CHRIN
+   jsr READST
+   and #$40 ; check for EOF
+   beq @read_loop
    lda #15
    jsr CLOSE
+   jsr chooser_clear_all
    stz chooser_scroll
    jmp scroll_chooser ; tail-optimization
-   

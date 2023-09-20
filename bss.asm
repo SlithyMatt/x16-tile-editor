@@ -54,10 +54,13 @@ button_latch: .res 1
 scratch_tile: .res 1024
 
 tile_filename_prefix: .res 2
-tile_filename: .res 256
+tile_filename: .res 29
 
 pal_filename_prefix: .res 2
-pal_filename: .res 256
+pal_filename: .res 33
+
+meta_filename_prefix: .res 2
+meta_filename: .res 34
 
 file_error: .res 1
 file_sa: .res 1
@@ -88,5 +91,7 @@ double_click_x: .res 1
 double_click_y: .res 1
 
 dos_cd_start: .res 3
-selected_file: .res 28
+selected_file: .res 29
 selection_is_dir: .res 1
+selection_is_file: .res 1
+

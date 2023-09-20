@@ -67,7 +67,6 @@ start:
    cmp #$53 ; S key
    bne @loop ; TODO - check more keys via table
    jsr save_tile_file
-   jsr save_pal_file
    bra @loop
 @exit:
    jsr load_default_palette
@@ -108,6 +107,7 @@ init_globals:
    stz menu_visible
    stz exit_req
    stz filename_stage+28
+   stz selected_file+28
    stz chooser_visible
    lda #$43
    sta dos_cd_start

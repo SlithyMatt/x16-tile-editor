@@ -134,8 +134,6 @@ file_menu_click:
    cpy #5
    bne @check_save_as
    jsr save_tile_file
-   ; TODO save metadata
-   jsr save_pal_file 
    bra @reset
 @check_save_as:
    cpy #6
