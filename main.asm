@@ -17,6 +17,7 @@
 .include "files.asm"
 .include "menus.asm"
 .include "chooser.asm"
+.include "options.asm"
 
 TILE_MAP = $1A800
 

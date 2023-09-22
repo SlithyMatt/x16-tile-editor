@@ -146,11 +146,28 @@ reset_tile_count:
    ora SB1
    asl
    tax
+   lda max_tiles+1,x
+   cmp tile_count+1
+   bmi @set_count
+   bne @return
    lda max_tiles,x
-   ; TODO handle user-limited tile count
-   sta tile_count
+   bmi @high_comp
+   lda tile_count
+   bmi @set_count
+   cmp max_tiles,x
+   bmi @return
+   bra @set_count
+@high_comp:
+   lda tile_count
+   bpl @set_count
+   cmp max_tiles,x
+   bmi @return
+@set_count:
    lda max_tiles+1,x
    sta tile_count+1
+   lda max_tiles,x
+   sta tile_count
+@return:
    rts
 
 load_tile:
