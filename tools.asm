@@ -848,30 +848,14 @@ next_width:
    ora SB1
    sta VERA_L0_tilebase
 @update:
-; reset previous right border
-   stz VERA_ctrl
-   lda #$91
-   sta VERA_addr_bank
-   lda #($B0 + TILE_VIZ_Y - 1)
-   sta VERA_addr_high
-   lda tile_width
-   cmp #8
-   beq @reset32 ; TODO: change to 64
-   clc
-   adc #(TILE_VIZ_X*2)
-   bra @reset
-@reset32: ; TODO: change to 64
-   lda #(TILE_VIZ_X*2 + 64)
-@reset:
-   sta VERA_addr_low
    lda #$40
-   sta VERA_data0
-   lda #$A0
-   ldx #32 ; TODO change to height of visible tileviz
-@loop:
-   sta VERA_data0
-   dex
-   bne @loop
+   ldy #(TILE_VIZ_Y-1)
+   ldx #(TILE_VIZ_X+8)
+   jsr print_char
+   ldx #(TILE_VIZ_X+16)
+   jsr print_char
+   ldx #(TILE_VIZ_X+32)
+   jsr print_char
    jsr center_preview_sprite
    jsr load_tile
    jsr reset_tile_count 
@@ -902,29 +886,14 @@ next_height:
    ora SB1
    sta VERA_L0_tilebase
 @update:
-; reset previous bottom border
-   stz VERA_ctrl
-   ldx #(TILE_VIZ_X-1)
-   lda tile_height
-   lsr
-   cmp #4
-   beq @reset32 ; TODO change to 64
-   clc
-   adc #TILE_VIZ_Y
-   bra @reset
-@reset32:
-   lda #(TILE_VIZ_Y+32)
-@reset:
-   tay
-   jsr print_set_vera_addr
    lda #$5D
-   sta VERA_data0
-   lda #$A0
-   ldx #32 ; TODO change to width of visible tileviz
-@loop:
-   sta VERA_data0
-   dex
-   bne @loop
+   ldx #(TILE_VIZ_X-1)
+   ldy #(TILE_VIZ_Y+8)
+   jsr print_char
+   ldy #(TILE_VIZ_Y+16)
+   jsr print_char
+   ldy #(TILE_VIZ_Y+32)
+   jsr print_char
    jsr center_preview_sprite
    jsr load_tile
    jsr reset_tile_count 

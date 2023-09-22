@@ -98,5 +98,8 @@ selected_file: .res 29
 selection_is_dir: .res 1
 selection_is_file: .res 1
 
+chooser_cursor_pos: .res 1
+chooser_cursor_state: .res 1 ; 0 = off, 1 = cursor, 2 = character
+chooser_cursor_countdown: .res 1
 
 

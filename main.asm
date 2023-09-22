@@ -60,7 +60,12 @@ start:
    lda exit_req
    bne @exit
    wai
-   ; check keyboard buffer
+   lda chooser_cursor_state
+   beq @check_hotkey
+   jsr chooser_cursor_tick
+   bra @loop
+@check_hotkey:
+   ; keyboard not captured, check for hotkey
    jsr GETIN
    cmp #0
    beq @loop
@@ -84,6 +89,7 @@ start:
    VERA_SET_ADDR (PREVIEW_SPRITE_ATTR+6),0
    stz VERA_data0
    rts ; return to BASIC
+   
 
 init_globals:
    stz sprite_mode
@@ -115,6 +121,7 @@ init_globals:
    sta dos_cd_start+1
    lda #$3A
    sta dos_cd_start+2
+   stz chooser_cursor_state
    rts
 
 left_click:

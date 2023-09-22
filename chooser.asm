@@ -92,6 +92,7 @@ show_chooser:
    inc chooser_visible
    stz selection_is_file
    stz selection_is_dir
+   stz chooser_cursor_state
    ldx #CHOOSER_X
    ldy #CHOOSER_Y
    jsr print_set_vera_addr
@@ -547,8 +548,121 @@ chooser_choice_click:
    lda chooser_action
    cmp #CHOOSER_ACTION_SAVE
    bne @return
-   ; TODO start cursor flashing at click position
+   txa
+   sec
+   sbc #CHOOSER_CHOICE_X
+   sta chooser_cursor_pos
+   ldx #0
+@pos_loop:
+   lda selected_file,x
+   beq @adjust
+   cpx chooser_cursor_pos
+   beq @set_cursor
+   inx
+   cpx #27
+   bne @pos_loop
+@adjust:
+   stx chooser_cursor_pos
+@set_cursor:
+   lda #CHOOSER_CHOICE_X
+   clc
+   adc chooser_cursor_pos
+   tax
+   ldy #CHOOSER_CHOICE_Y
+   lda #$A0
+   jsr print_char
+   lda #1
+   sta chooser_cursor_state
+   lda #30
+   sta chooser_cursor_countdown
 @return:   
+   rts
+
+chooser_cursor_tick:
+   jsr GETIN
+   beq chooser_advance_cursor_state
+   cmp #$14
+   bne @check_delete
+   ldx chooser_cursor_pos
+   beq chooser_advance_cursor_state
+   dec chooser_cursor_pos
+@backspace_loop:
+   lda selected_file,x
+   sta selected_file-1,x
+   beq @print_filename
+   inx
+   cpx #28
+   bne @backspace_loop
+   stz selected_file+28
+   bra @print_filename
+@check_delete:
+   cmp #$19
+   bne @check_printable
+   ldx chooser_cursor_pos
+   lda selected_file,x
+   beq chooser_advance_cursor_state
+@delete_loop:
+   lda selected_file+1,x
+   sta selected_file,x
+   beq @print_filename
+   inx
+   cpx #28
+   bne @delete_loop
+   stz selected_file+28
+   bra @print_filename
+@check_printable:
+   cmp #$20
+   bmi chooser_advance_cursor_state
+   cmp #$7B
+   bpl chooser_advance_cursor_state
+   cmp #$2A ; no asterix
+   beq chooser_advance_cursor_state
+   cmp #$2F ; no slash
+   beq chooser_advance_cursor_state
+   sta SB1
+   ldx chooser_cursor_pos
+   cpx #16
+   beq chooser_advance_cursor_state
+   inc chooser_cursor_pos
+@insert_loop:
+   lda selected_file,x
+   sta SB2
+   lda SB1
+   sta selected_file,x
+   beq @print_filename
+   lda SB2
+   sta SB1
+   inx
+   cpx #28
+   bne @insert_loop
+   stz selected_file+28
+@print_filename:
+   jsr chooser_print_selected_file
+   lda #30
+   sta chooser_cursor_countdown
+   lda #2
+   sta chooser_cursor_state
+   rts
+chooser_advance_cursor_state:
+   dec chooser_cursor_countdown
+   bne @return
+   lda #30
+   sta chooser_cursor_countdown
+   lda chooser_cursor_state
+   eor #$03
+   sta chooser_cursor_state
+   cmp #1
+   bne @no_cursor
+   lda chooser_cursor_pos
+   clc
+   adc #CHOOSER_CHOICE_X
+   tax
+   ldy #CHOOSER_CHOICE_Y
+   lda #$A0
+   jmp print_char ; tail-optimization
+@no_cursor:
+   jmp chooser_print_selected_file ; tail-optimization
+@return:
    rts
 
 chooser_file_click:
@@ -610,18 +724,18 @@ chooser_file_click:
 @choose_loop:
    lda (ZP_PTR_1),y
    sta selected_file,y
-   beq @print
+   beq chooser_print_selected_file
    iny
    cpy #28
    bne @choose_loop
-@print:
+chooser_print_selected_file:
    ldy #0
    lda #<filename_stage
    sta ZP_PTR_2
    lda #>filename_stage
    sta ZP_PTR_2+1
 @print_copy_loop:
-   lda (ZP_PTR_1),y
+   lda selected_file,y
    jsr ascii_to_screen_code
    cmp #$80
    beq @pad
@@ -629,12 +743,12 @@ chooser_file_click:
    iny
    cpy #16
    bne @print_copy_loop
-   lda (ZP_PTR_1),y
+   lda selected_file,y
    beq @pad
    jsr ascii_to_screen_code
    tax
    iny
-   lda (ZP_PTR_1),y
+   lda selected_file,y
    bne @asterix
    dey
    txa
@@ -661,7 +775,6 @@ chooser_file_click:
    ldx #CHOOSER_CHOICE_X
    ldy #CHOOSER_CHOICE_Y
    jmp print_string ; tail-optimization
-
 
 chooser_clear_file_row: .asciiz "                             "
 
@@ -696,6 +809,7 @@ chooser_clear_all:
 
 close_chooser:
    stz chooser_visible
+   stz chooser_cursor_state
    jmp load_tile ; tail-optimization
 
 chooser_action_click:
@@ -760,6 +874,8 @@ chooser_action_click:
    beq @read_loop
    lda #15
    jsr CLOSE
+   stz selected_file
+   jsr chooser_print_selected_file
    jsr chooser_clear_all
    stz chooser_scroll
    jmp scroll_chooser ; tail-optimization

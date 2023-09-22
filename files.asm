@@ -104,6 +104,22 @@ load_metadata:
    jsr READST
    and #$BF ; clear EOF bit
    sta file_error
+   lda #$40
+   ldy #(TILE_VIZ_Y-1)
+   ldx #(TILE_VIZ_X+8)
+   jsr print_char
+   ldx #(TILE_VIZ_X+16)
+   jsr print_char
+   ldx #(TILE_VIZ_X+32)
+   jsr print_char
+   lda #$5D
+   ldx #(TILE_VIZ_X-1)
+   ldy #(TILE_VIZ_Y+8)
+   jsr print_char
+   ldy #(TILE_VIZ_Y+16)
+   jsr print_char
+   ldy #(TILE_VIZ_Y+32)
+   jsr print_char
    jsr reset_tile_count
    jsr print_tile_width
    jsr print_tile_height
