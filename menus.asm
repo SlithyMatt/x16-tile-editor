@@ -224,7 +224,7 @@ options_menu_block:
 
    .byte "| Use PRG File Headers ",$7A," |"
    .byte "| CRT Mode               |"
-   .byte "| Max Set Size:  848     |"
+   .byte "| Max Set Size:          |"
 
    .byte $6D
    .repeat 24
@@ -261,7 +261,15 @@ show_options_menu:
    sta VERA_addr_low
    dey
    bne @loop
-   rts
+   lda #<tile_count
+   sta ZP_PTR_1
+   lda #>tile_count
+   sta ZP_PTR_1+1
+   lda #ZP_PTR_1
+   ldx #(OPTIONS_X+15)
+   ldy #5
+   jmp print_word_dec ; tail-optimization
+
 
 options_menu_click:
    cpy #5
@@ -270,7 +278,20 @@ options_menu_click:
    bmi @reset
    cpx #(OPTIONS_X+24)
    bpl @reset
-   ; TODO selection
+   cpy #3
+   bne @check_crt
+   jsr reset_menu
+   jmp toggle_prg_header ; tail-optimization
+@check_crt:
+   cpy #4
+   bne @check_size
+   jsr reset_menu
+   jmp toggle_crt_mode ; tail-optimization
+@check_size:
+   cpy #5
+   bne @reset
+   jsr reset_menu
+   jmp set_tileset_size ; tail-optimization
 @reset:
    jmp reset_menu ; tail-optimization
 
