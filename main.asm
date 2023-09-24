@@ -132,6 +132,7 @@ init_globals:
    sta dos_cd_start+2
    stz cursor_state
    stz tileset_size_visible
+   stz prg_header
    rts
 
 left_click:

@@ -222,7 +222,7 @@ options_menu_block:
    .endrepeat
    .byte $6e
 
-   .byte "| Use PRG File Headers ",$7A," |"
+   .byte "| Use PRG File Headers   |"
    .byte "| CRT Mode               |"
    .byte "| Max Set Size:          |"
 
@@ -261,6 +261,13 @@ show_options_menu:
    sta VERA_addr_low
    dey
    bne @loop
+   lda prg_header
+   beq @print_tile_count
+   ldx #(OPTIONS_X+22)
+   ldy #3
+   lda #$7A
+   jsr print_char
+@print_tile_count:
    lda #<tile_count
    sta ZP_PTR_1
    lda #>tile_count

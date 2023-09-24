@@ -1,5 +1,7 @@
 toggle_prg_header:
-   ;TODO
+   lda prg_header
+   eor #1
+   sta prg_header
    rts
 
 TILESET_SIZE_X = 23

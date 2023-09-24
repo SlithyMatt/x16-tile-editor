@@ -107,3 +107,5 @@ old_tile_count: .res 2
 new_tile_count_string: .res 5
 dec_word: .res 2
 bin_word: .res 2
+
+prg_header: .res 1

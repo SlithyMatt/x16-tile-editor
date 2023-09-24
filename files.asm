@@ -64,7 +64,11 @@ set_filename: ; FILENAME_PTR = address of null-terminated filename
    rts
 
 load_tile_file:
-   stz file_sa
+   lda prg_header
+   inc
+   and #2   
+   eor #2
+   sta file_sa
    lda #<tile_filename
    sta FILENAME_PTR
    lda #>tile_filename
@@ -128,7 +132,11 @@ load_metadata:
    rts
 
 load_pal_file:
-   stz file_sa
+   lda prg_header
+   inc
+   and #2
+   eor #2
+   sta file_sa
    lda #<pal_filename
    sta FILENAME_PTR
    lda #>pal_filename
@@ -170,7 +178,8 @@ save_tile_file:
 @start_write:
    stz VERA_ctrl
    VERA_SET_ADDR $00000,1
-   ; TODO - omit header if not desired
+   lda prg_header
+   beq @calculate_size
    lda #0
    jsr CHROUT
    jsr CHROUT
@@ -240,6 +249,9 @@ save_tile_file:
 @error:
    sta file_error
 @done:
+   ; one more byte
+   lda VERA_data0
+   jsr CHROUT
    lda #LOGICAL_FILE
    jsr CLOSE
    jsr READST
@@ -287,10 +299,12 @@ save_pal_file:
 @start_write:
    stz VERA_ctrl
    VERA_SET_ADDR VRAM_palette,1
-   ; TODO - omit header if not desired
+   lda prg_header
+   beq @after_header
    lda #0
    jsr CHROUT
    jsr CHROUT
+@after_header:
    ldx #0
    ldy #1
 @write_loop: ; write 512 bytes
