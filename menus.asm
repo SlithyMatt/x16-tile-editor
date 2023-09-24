@@ -272,7 +272,7 @@ show_options_menu:
 
 
 options_menu_click:
-   cpy #5
+   cpy #6
    bpl @reset
    cpx #OPTIONS_X
    bmi @reset

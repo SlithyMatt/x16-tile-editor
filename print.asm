@@ -168,11 +168,9 @@ print_load_addrs: ; Input: A = ZP address of pointer to value; X,Y = coordinates
    sta SB1
    ldy #1
    lda (IND_VEC),y
-   sta SB2
+   sta IND_VEC+1
    lda SB1
    sta IND_VEC
-   lda SB2
-   sta IND_VEC+1
    rts
 
 print_vaddr: ; A = ZP address of pointer to 3-byte VRAM address

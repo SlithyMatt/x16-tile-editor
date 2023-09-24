@@ -22,6 +22,7 @@
 TILE_MAP = $1A800
 
 start:
+   jsr flush_keyboard
    jsr init_globals
    jsr init_mouse
    jsr load_initscreen
@@ -61,16 +62,23 @@ start:
    lda exit_req
    bne @exit
    wai
-   lda chooser_cursor_state
+   lda cursor_state
    beq @check_hotkey
+   lda chooser_visible
+   beq @check_tileset_size
    jsr chooser_cursor_tick
+   bra @loop
+@check_tileset_size:
+   lda tileset_size_visible
+   beq @loop ; future? - check for other cursors
+   jsr tileset_size_cursor_tick
    bra @loop
 @check_hotkey:
    ; keyboard not captured, check for hotkey
    jsr GETIN
    cmp #0
    beq @loop
-   cmp #$53 ; S key
+   cmp #$AE ; X-S key
    bne @loop ; TODO - check more keys via table
    jsr save_tile_file
    bra @loop
@@ -122,7 +130,8 @@ init_globals:
    sta dos_cd_start+1
    lda #$3A
    sta dos_cd_start+2
-   stz chooser_cursor_state
+   stz cursor_state
+   stz tileset_size_visible
    rts
 
 left_click:
@@ -130,12 +139,16 @@ left_click:
    bne @do_menu
    lda chooser_visible
    bne @do_chooser
+   lda tileset_size_visible
+   bne @do_tileset_size
    cpy #1
    bne @check_main
 @do_menu:
    jmp menu_click ; tail-optimization
 @do_chooser:
    jmp chooser_click ; tail-optimization
+@do_tileset_size:
+   jmp tileset_size_click ; tail-optimization
 @check_main:
    cpy #3
    bne @check_tile_viz
@@ -178,4 +191,9 @@ right_click:
 @return:
    rts
 
+flush_keyboard:
+   jsr GETIN
+   cmp #0
+   bne flush_keyboard
+   rts
 
