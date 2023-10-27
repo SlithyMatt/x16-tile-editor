@@ -64,6 +64,8 @@ set_filename: ; FILENAME_PTR = address of null-terminated filename
    rts
 
 load_tile_file:
+   jsr set_meta_filename
+   jsr load_metadata
    lda prg_header
    inc
    and #2   
@@ -84,8 +86,6 @@ load_tile_file:
    and #$BF ; clear EOF bit
    sta file_error
    bne @return
-   jsr set_meta_filename
-   jsr load_metadata
    jsr set_pal_filename
    jmp load_pal_file ; tail-optimization
 @return:

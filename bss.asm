@@ -7,6 +7,7 @@ tile_width: .res 1
 tile_height: .res 1
 bits_per_pixel: .res 1
 tile_count: .res 2
+prg_header: .res 1
 end_metadata:
 
 tile_index: .res 2
@@ -108,4 +109,3 @@ new_tile_count_string: .res 5
 dec_word: .res 2
 bin_word: .res 2
 
-prg_header: .res 1
