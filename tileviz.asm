@@ -559,6 +559,8 @@ scale_sprite_to_4bpp:
    bra @calc_loop1
 @start_load1:
    sta SB1
+   lda #BRAM_BANK
+   sta RAM_BANK
    ldx #0
 @load_loop1:
    lda VERA_data1

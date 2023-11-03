@@ -92,6 +92,13 @@ load_tile_file:
    rts
 
 load_metadata:
+   ; backup metadata
+   ldx #(end_metadata-metadata-1)
+@backup_loop:
+   lda metadata,x
+   sta metadata_backup,x
+   dex
+   bne @backup_loop
    lda #2 ; never use header for metadata
    sta file_sa
    lda #<meta_filename
@@ -108,6 +115,15 @@ load_metadata:
    jsr READST
    and #$BF ; clear EOF bit
    sta file_error
+   beq @reset_ui
+   ; restore the metadata
+   ldx #(end_metadata-metadata-1)
+@restore_loop:
+   lda metadata_backup,x
+   sta metadata,x
+   dex
+   bne @restore_loop
+@reset_ui:
    lda #$40
    ldy #(TILE_VIZ_Y-1)
    ldx #(TILE_VIZ_X+8)

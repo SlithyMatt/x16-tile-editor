@@ -1,6 +1,5 @@
 CHOOSER_X = 23
 CHOOSER_Y = 7
-DIR_STAGING = $8000
 
 CHOOSER_CHOICE_X = 38
 CHOOSER_CHOICE_Y = 8
@@ -145,10 +144,12 @@ scroll_chooser: ; input: A = scroll position
    ldx #8
    ldy #0
    jsr SETLFS
+   lda #BRAM_BANK
+   sta RAM_BANK
    lda #0
-   ldx #<DIR_STAGING
+   ldx #<dir_staging
    stx ZP_PTR_1
-   ldy #>DIR_STAGING
+   ldy #>dir_staging
    sty ZP_PTR_1+1
    jsr LOAD
    jsr flush_line
@@ -186,10 +187,12 @@ scroll_chooser: ; input: A = scroll position
    ldx #8
    ldy #0
    jsr SETLFS
+   lda #BRAM_BANK
+   sta RAM_BANK
    lda #0
-   ldx #<DIR_STAGING
+   ldx #<dir_staging
    stx ZP_PTR_1
-   ldy #>DIR_STAGING
+   ldy #>dir_staging
    sty ZP_PTR_1+1
    jsr LOAD
    jsr flush_line
@@ -314,10 +317,12 @@ scroll_chooser: ; input: A = scroll position
    ldx #8
    ldy #0
    jsr SETLFS
+   lda #BRAM_BANK
+   sta RAM_BANK
    lda #0
-   ldx #<DIR_STAGING
+   ldx #<dir_staging
    stx ZP_PTR_1
-   ldy #>DIR_STAGING
+   ldy #>dir_staging
    sty ZP_PTR_1+1
    jsr LOAD
    jsr flush_line

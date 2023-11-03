@@ -10,6 +10,8 @@ tile_count: .res 2
 prg_header: .res 1
 end_metadata:
 
+metadata_backup: .res (end_metadata-metadata)
+
 tile_index: .res 2
 fg_color: .res 1
 bg_color: .res 1
@@ -55,8 +57,6 @@ preview_y: .res 2
 
 button_latch: .res 1
 
-scratch_tile: .res 1024
-
 tile_filename_prefix: .res 2
 tile_filename: .res 29
 
@@ -72,7 +72,6 @@ file_sa: .res 1
 rgb_gui_on: .res 1
 
 dropper: .res 1
-clipboard: .res 4096
 
 menu_visible: .res 1
 
@@ -109,3 +108,4 @@ new_tile_count_string: .res 5
 dec_word: .res 2
 bin_word: .res 2
 
+tool_strings_reversed: ; use up remainder of segment
