@@ -52,12 +52,10 @@ HFLIP_Y = 55
 VFLIP_X = 9
 VFLIP_Y = 56
 
-TOOL_STRINGS_REVERSED = $0400
-
 .macro PRINT_REVERSED_TOOL_STRING string_addr, chx, chy
-   lda #<(TOOL_STRINGS_REVERSED + string_addr - tool_strings)
+   lda #<(tool_strings_reversed + string_addr - tool_strings)
    sta PRINT_STRING_PTR
-   lda #>(TOOL_STRINGS_REVERSED + string_addr - tool_strings)
+   lda #>(tool_strings_reversed + string_addr - tool_strings)
    sta PRINT_STRING_PTR+1
    lda #PRINT_STRING_PTR
    ldx #chx
@@ -109,9 +107,9 @@ init_tools:
    sta ZP_PTR_1
    lda #>tool_strings
    sta ZP_PTR_1+1
-   lda #<TOOL_STRINGS_REVERSED
+   lda #<tool_strings_reversed
    sta ZP_PTR_2
-   lda #>TOOL_STRINGS_REVERSED
+   lda #>tool_strings_reversed
    sta ZP_PTR_2+1
    ldy #0
 @loop:
@@ -502,6 +500,8 @@ shift_left:
    sta VERA_addr_low
    ldx #0
    ldy tile_height
+   lda #BRAM_BANK
+   sta RAM_BANK
 @read_row:
    lda VERA_data0
    sta scratch_tile,x
@@ -577,6 +577,8 @@ shift_right:
    sta VERA_addr_low
    ldx #0
    ldy tile_height
+   lda #BRAM_BANK
+   sta RAM_BANK
 @read_row:
    lda VERA_data0
    sta scratch_tile,x
@@ -781,6 +783,8 @@ copy_tile:
    sta ZP_PTR_1
    lda #>clipboard
    sta ZP_PTR_1+1
+   lda #BRAM_BANK
+   sta RAM_BANK
 @loop:
    dey
    cpy #$FF

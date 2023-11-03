@@ -1,8 +1,8 @@
-.org $1000
+.org $0400
 .bss
 .include "bss.asm"
 
-.org $3000 ; TODO: Change to $C000 for ROM
+.org $5000 ; TODO: Change to $C000 for ROM
 .code
    jmp start
 
@@ -117,7 +117,10 @@ init_globals:
    sta tile_viz_width
    lda #52
    sta tile_viz_height
-   jsr reset_tile_count
+   lda #$7F ; set tile count to impossibly high number
+   sta tile_count
+   sta tile_count+1
+   jsr reset_tile_count ; reset to maximum for current attributes
    stz button_latch
    stz menu_visible
    stz exit_req
@@ -198,3 +201,6 @@ flush_keyboard:
    bne flush_keyboard
    rts
 
+.org $a000
+.segment "BRAM"
+.include "bram.asm"
