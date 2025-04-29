@@ -159,8 +159,8 @@ view_menu_block:
    .endrepeat
    .byte $73
 
-   .byte "| Tile Sheet        |"
-   .byte "| Zoom Preview x2   |"
+   .byte "|                   |"
+   .byte "|                   |"
 
    .byte $6D
    .repeat 19
@@ -223,7 +223,7 @@ options_menu_block:
    .byte $6e
 
    .byte "| Use PRG File Headers   |"
-   .byte "| CRT Mode               |"
+   .byte "|                        |"
    .byte "| Max Set Size:          |"
 
    .byte $6D
@@ -310,7 +310,7 @@ about_panel_block:
    .endrepeat
    .byte $6e
 
-   .byte "| X16 Tile Editor - Version 0.0.4a              |"
+   .byte "| X16 Tile Editor - Version 0.1b                |"
    .byte "| by Matt Heffernan                             |"
    .byte "| https://github.com/slithymatt/x16-tile-editor |"
 
