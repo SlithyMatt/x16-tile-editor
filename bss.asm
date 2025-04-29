@@ -1,7 +1,5 @@
 ; GLOBAL VARIABLES
 
-sprite_mode: .res 1  ; 0 = tiles, 1 = tile-sized sprites, 2 = big sprites
-
 metadata:
 tile_width: .res 1
 tile_height: .res 1
@@ -54,6 +52,8 @@ TILE_ADDR_Y = 51
 
 preview_x: .res 2
 preview_y: .res 2
+
+preview_2x: .res 1
 
 button_latch: .res 1
 

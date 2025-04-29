@@ -428,6 +428,8 @@ load_tile:
    lda bits_per_pixel
    cmp #4
    bmi @scale_to_4bpp
+   lda preview_2x
+   bne @zoom
    lda tile_addr+2
    sta SB2
    lda tile_addr+1
@@ -454,6 +456,9 @@ load_tile:
    bra @setxy
 @scale_to_4bpp:
    jsr scale_sprite_to_4bpp
+   bra @setxy
+@zoom:
+   jsr zoom_sprite
 @setxy:
    lda preview_x
    sta VERA_data0
@@ -488,6 +493,20 @@ load_tile:
    sta SB1
    lda palette_offset
    ora SB1
+   sta SB1
+   lda preview_2x
+   beq @set_dim_byte
+   lda #32
+   cmp tile_width
+   bpl @set_dim_byte
+   cmp tile_height
+   bpl @set_dim_byte
+   lda SB1
+   clc
+   adc #$50
+   sta SB1
+@set_dim_byte:
+   lda SB1
    sta VERA_data0
    rts
 
@@ -502,6 +521,22 @@ apply_offset:
    rts
 
 center_preview_sprite:
+   lda tile_width
+   sta SB1
+   lda tile_height
+   sta SB2
+   lda preview_2x
+   beq @calcxy
+   ; check if either dimension is 64, where preview 2X is disabled
+   lda #32
+   cmp tile_width
+   bpl @calcxy
+   cmp tile_height
+   bpl @calcxy
+   ; double dimensions
+   asl SB1
+   asl SB2
+@calcxy:
    lda #64
    sec
    sbc tile_width
@@ -540,6 +575,15 @@ scale_sprite_to_4bpp:
    sta VERA_addr_high
    lda tile_addr
    sta VERA_addr_low
+   lda preview_2x
+   beq @scale
+   lda #32
+   cmp tile_height
+   bpl @scale
+   cmp tile_width
+   bpl @scale
+   jmp scale_and_zoom ; tail optimization
+@scale:
    lda bits_per_pixel
    cmp #1
    beq @load1bpp
@@ -674,6 +718,163 @@ scale_sprite_to_4bpp:
    inx
    cpx SB1
    bne @scale_loop2
+   rts
+
+scale_and_zoom:
+   lda bits_per_pixel
+   cmp #1
+   beq @scale1bpp
+   jmp scale2bpp
+@scale1bpp:
+   lda tile_width
+   lsr
+   lsr
+   lsr
+   tax
+   stx SB3
+   ldy tile_height
+   lda #<scratch_tile
+   sta ZP_PTR_1
+   lda #>scratch_tile
+   sta ZP_PTR_1+1
+   lda #BRAM_BANK
+   sta RAM_BANK
+@line_loop:
+   phy
+   ldy #0
+   lda VERA_data1
+   sta SB1
+@byte_loop:
+   stz SB2
+   asl SB1
+   rol SB2
+   lda SB2
+   asl
+   asl
+   asl
+   asl
+   ora SB2
+   sta (ZP_PTR_1),y
+   iny
+   cpy #8
+   bne @byte_loop
+   ply
+   dex
+   bne @line_loop
+   dey
+   beq write_scratch
+   lda ZP_PTR_1
+   clc
+   adc tile_width
+   sta ZP_PTR_1
+   lda ZP_PTR_1+1
+   adc #0
+   sta ZP_PTR_1+1
+   ldx SB3
+   bra @line_loop
+write_scratch:
+   VERA_SET_ADDR SCALED_4BPP_SPRITE_VRAM,1
+   lda #<scratch_tile
+   sta ZP_PTR_1
+   lda #>scratch_tile
+   sta ZP_PTR_1+1
+   ldx #4
+   ldy #0
+@page_loop:
+   lda (ZP_PTR_1),y
+   sta VERA_data1
+   iny
+   bne @page_loop
+   inc ZP_PTR_1+1
+   dex
+   bne @page_loop
+   rts ; return from the middle!
+scale2bpp:
+   lda tile_width
+   lsr
+   lsr
+   tax
+   stx SB3
+   ldy tile_height
+   lda #<scratch_tile
+   sta ZP_PTR_1
+   lda #>scratch_tile
+   sta ZP_PTR_1+1
+   lda #BRAM_BANK
+   sta RAM_BANK
+@line_loop:
+   phy
+   ldy #0
+   lda VERA_data1
+   sta SB1
+@byte_loop:
+   stz SB2
+   asl SB1
+   rol SB2
+   asl SB1
+   rol SB2
+   lda SB2
+   asl
+   asl
+   asl
+   asl
+   ora SB2
+   sta (ZP_PTR_1),y
+   iny
+   cpy #4
+   bne @byte_loop
+   ply
+   dex
+   bne @line_loop
+   dey
+   beq write_scratch
+   lda ZP_PTR_1
+   clc
+   adc tile_width
+   sta ZP_PTR_1
+   lda ZP_PTR_1+1
+   adc #0
+   sta ZP_PTR_1+1
+   ldx SB3
+   bra @line_loop
+
+
+zoom_sprite:
+   lda tile_width
+   cmp #32
+   bmi @get_height
+   jmp @return
+@get_height:
+   lda tile_height
+   cmp #32
+   bmi @set_addrs
+   jmp @return
+@set_addrs:
+   dec ; height - 1
+   sta SB1
+   lda bits_per_pixel
+   cmp #8
+   beq @mult_by_width
+   lsr SB1
+@mult_by_width:
+   stz SB2
+   lda tile_width
+@shift_width_loop:
+   lsr
+   asl SB1
+   rol SB2
+   bit #1
+   beq @shift_width_loop
+   stz VERA_ctrl
+   
+
+   lda #$11
+   sta VERA_addr_bank
+    
+
+
+
+@return:
    rts
 
 tileviz_reset:
@@ -1040,4 +1241,10 @@ tileviz_getcolor:
    jsr palette_sel_update
    stz dropper
    jmp reset_mouse_cursor ; tail-optimization
+
+toggle_preview_2x:
+   lda preview_2x
+   eor #1
+   sta preview_2x
+   jmp load_tile
    

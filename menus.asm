@@ -197,6 +197,13 @@ show_view_menu:
    sta VERA_addr_low
    dey
    bne @loop
+   lda preview_2x
+   beq @return
+   ldx #(VIEW_X+17)
+   ldy #4
+   lda #$7A
+   jsr print_char
+@return:
    rts
 
 view_menu_click:
@@ -206,7 +213,16 @@ view_menu_click:
    bmi @reset
    cpx #(VIEW_X+19)
    bpl @reset
-   ; TODO selection
+   cpy #3
+   bne @check_preview
+   jsr reset_menu
+   ; TODO show tile map view
+   rts
+@check_preview:
+   cpy #4
+   bne @reset
+   jsr reset_menu
+   jmp toggle_preview_2x ; tail-optimization   
 @reset:
    jmp reset_menu ; tail-optimization
 

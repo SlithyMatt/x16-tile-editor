@@ -101,7 +101,6 @@ start:
    
 
 init_globals:
-   stz sprite_mode
    lda #16
    sta tile_height
    sta tile_width
@@ -136,6 +135,7 @@ init_globals:
    stz cursor_state
    stz tileset_size_visible
    stz prg_header
+   stz preview_2x
    rts
 
 left_click:
