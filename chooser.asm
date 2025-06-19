@@ -81,7 +81,7 @@ chooser_open_tiles:
    rts
 
 dos_directory:
-dos_directory_dirs_only: .byte "$:*=D"
+dos_directory_dirs_only: .byte "$:=D"
 end_dos_directory_dirs_only:
 
 dos_directory_prgs_only: .byte "$:*=P"
@@ -172,11 +172,6 @@ scroll_chooser: ; input: A = scroll position
    bra @get_dirs
 @scroll_zero:
    stz chooser_scroll
-   lda #$2E ; "."
-   sta dir_list
-   sta dir_list+1
-   stz dir_list+2
-   inc dir_list_len
 @get_dirs:
    stz dir_read_done
    lda #(end_dos_directory_dirs_only-dos_directory_dirs_only)
@@ -197,11 +192,6 @@ scroll_chooser: ; input: A = scroll position
    jsr LOAD
    jsr flush_line
    clc
-   lda dir_list_len
-   beq @no_dotdot
-   lda #26
-   bra @init_dir_list
-@no_dotdot:
    lda #0
 @init_dir_list:
    adc #<dir_list
